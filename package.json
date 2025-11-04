@@ -15,6 +15,7 @@
     "android:build:release": "npx @tauri-apps/cli android build --release"
   },
   "dependencies": {
+    "@tauri-apps/api": "^2.9.0",
     "pinia": "^3.0.3",
     "vant": "^4.9.21",
     "vue": "^3.5.22"

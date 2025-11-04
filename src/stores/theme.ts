@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, watch } from 'vue'
+import { invoke } from '@tauri-apps/api/core'
 
 /**
  * 主题类型
@@ -13,6 +14,7 @@ export type ThemeMode = 'light' | 'dark' | 'auto'
  * 实际应用的主题（解析后）
  */
 export type ResolvedTheme = 'light' | 'dark'
+
 
 const STORAGE_KEY = 'app-theme-mode'
 
@@ -54,8 +56,10 @@ function resolveTheme(mode: ThemeMode): ResolvedTheme {
 
 /**
  * 应用主题到 DOM
+ * @param theme 解析后的主题
+ * @param mode 用户选择的主题模式
  */
-function applyTheme(theme: ResolvedTheme) {
+function applyTheme(theme: ResolvedTheme, mode: ThemeMode) {
   const root = document.documentElement
   
   if (theme === 'dark') {
@@ -68,6 +72,48 @@ function applyTheme(theme: ResolvedTheme) {
   
   // 设置 CSS 变量供其他组件使用
   root.setAttribute('data-theme', theme)
+  
+  // 同步到 Android 系统栏（如果在 Android 环境中）
+  syncToAndroid(theme, mode)
+}
+
+/**
+ * Android Theme Bridge 接口定义
+ */
+interface AndroidThemeBridge {
+  setTheme(theme: ResolvedTheme, mode: ThemeMode): void
+}
+
+/**
+ * Window 接口扩展
+ */
+declare global {
+  interface Window {
+    AndroidTheme?: AndroidThemeBridge
+  }
+}
+
+/**
+ * 同步主题到 Android 系统栏
+ * @param theme 解析后的主题
+ * @param mode 用户选择的主题模式
+ */
+function syncToAndroid(theme: ResolvedTheme, mode: ThemeMode) {
+  // 调用 Android JavaScript Bridge
+  if (typeof window !== 'undefined' && window.AndroidTheme) {
+    try {
+      window.AndroidTheme.setTheme(theme, mode)
+    } catch (error) {
+      console.error('[Theme] Android sync failed:', error)
+    }
+  }
+  
+  // 保存到 localStorage（作为备份）
+  try {
+    localStorage.setItem('app-theme-resolved', theme)
+  } catch (error) {
+    // 静默失败
+  }
 }
 
 export const useThemeStore = defineStore('theme', () => {
@@ -78,7 +124,7 @@ export const useThemeStore = defineStore('theme', () => {
   const resolvedTheme = ref<ResolvedTheme>(resolveTheme(mode.value))
   
   // 立即应用主题（在 store 创建时）
-  applyTheme(resolvedTheme.value)
+  applyTheme(resolvedTheme.value, mode.value)
   
   /**
    * 设置主题模式
@@ -87,7 +133,7 @@ export const useThemeStore = defineStore('theme', () => {
     mode.value = newMode
     saveTheme(newMode)
     resolvedTheme.value = resolveTheme(newMode)
-    applyTheme(resolvedTheme.value)
+    applyTheme(resolvedTheme.value, newMode)
   }
   
   /**
@@ -115,7 +161,7 @@ export const useThemeStore = defineStore('theme', () => {
     const handleChange = (e: MediaQueryListEvent) => {
       if (mode.value === 'auto') {
         resolvedTheme.value = e.matches ? 'dark' : 'light'
-        applyTheme(resolvedTheme.value)
+        applyTheme(resolvedTheme.value, mode.value)
       }
     }
     
@@ -132,14 +178,14 @@ export const useThemeStore = defineStore('theme', () => {
    * 初始化主题
    */
   function initTheme() {
-    applyTheme(resolvedTheme.value)
+    applyTheme(resolvedTheme.value, mode.value)
     setupSystemThemeListener()
   }
   
   // 监听 mode 变化
   watch(mode, (newMode) => {
     resolvedTheme.value = resolveTheme(newMode)
-    applyTheme(resolvedTheme.value)
+    applyTheme(resolvedTheme.value, newMode)
   })
   
   return {
