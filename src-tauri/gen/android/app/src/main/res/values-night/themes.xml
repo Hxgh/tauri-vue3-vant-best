@@ -14,7 +14,7 @@
         <item name="android:navigationBarColor">@android:color/transparent</item>
         <!-- 导航栏图标使用浅色（适配深色背景） -->
         <item name="android:windowLightNavigationBar" tools:targetApi="o">false</item>
-        <!-- 禁用系统自动调整导航栏对比度（Android 10+） -->
+        <!-- 禁用系统自动调整导航栏对比度（避免系统强制添加半透明遮罩） -->
         <item name="android:enforceNavigationBarContrast" tools:targetApi="q">false</item>
         
         <!-- 窗口背景色 -->
