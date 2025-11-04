@@ -1,0 +1,109 @@
+/**
+ * 移动端安全区域适配
+ * 适用于 iOS 刘海屏、Android 异形屏等设备
+ */
+
+:root {
+  /* 安全区域变量（兼容 iOS 11.0-11.2 的 constant() 和标准 env()） */
+  --sat: constant(safe-area-inset-top, 0px);
+  --sat: env(safe-area-inset-top, 0px);
+  
+  --sab: constant(safe-area-inset-bottom, 0px);
+  --sab: env(safe-area-inset-bottom, 0px);
+  
+  --sal: constant(safe-area-inset-left, 0px);
+  --sal: env(safe-area-inset-left, 0px);
+  
+  --sar: constant(safe-area-inset-right, 0px);
+  --sar: env(safe-area-inset-right, 0px);
+  
+  /* 兜底值：某些 Android 设备 env() 返回 0，需要最小安全距离 */
+  --sab-fallback: max(var(--sab), 20px);
+  
+  /* Vant 组件高度常量 */
+  --navbar-height: 46px;
+  --tabbar-height: 50px;
+  
+  /* 包含安全区域的总高度 */
+  --navbar-total-height: calc(var(--navbar-height) + var(--sat));
+  --tabbar-total-height: calc(var(--tabbar-height) + var(--sab-fallback));
+  
+  /* 内容区域高度（有顶部和底部导航） */
+  --content-height-full: calc(
+    100vh - var(--navbar-total-height) - var(--tabbar-total-height)
+  );
+  
+  /* 内容区域高度（仅有顶部导航） */
+  --content-height-with-navbar: calc(100vh - var(--navbar-total-height));
+  
+  /* 内容区域高度（仅有底部导航） */
+  --content-height-with-tabbar: calc(100vh - var(--tabbar-total-height));
+}
+
+/* 全局安全区域适配 */
+body {
+  /* 确保背景色延伸到安全区域 */
+  padding: 0;
+  margin: 0;
+}
+
+/* 通用安全区域类 */
+.safe-area-top {
+  padding-top: var(--sat);
+}
+
+.safe-area-bottom {
+  padding-bottom: var(--sab);
+}
+
+.safe-area-left {
+  padding-left: var(--sal);
+}
+
+.safe-area-right {
+  padding-right: var(--sar);
+}
+
+.safe-area-all {
+  padding-top: var(--sat);
+  padding-bottom: var(--sab);
+  padding-left: var(--sal);
+  padding-right: var(--sar);
+}
+
+/* 内容区域水平安全边距 */
+.safe-area-horizontal {
+  padding-left: max(16px, var(--sal));
+  padding-right: max(16px, var(--sar));
+}
+
+/* 全屏容器（包含安全区域） */
+.fullscreen-container {
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* 内容区域（自动适配 NavBar 和 Tabbar） */
+.content-area-full {
+  height: var(--content-height-full);
+  overflow-y: auto;
+}
+
+.content-area-with-navbar {
+  height: var(--content-height-with-navbar);
+  overflow-y: auto;
+}
+
+.content-area-with-tabbar {
+  height: var(--content-height-with-tabbar);
+  overflow-y: auto;
+}
+
+/* iOS 特殊处理：防止橡皮筋效果 */
+@supports (-webkit-touch-callout: none) {
+  .prevent-bounce {
+    overscroll-behavior: contain;
+  }
+}
+

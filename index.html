@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="description" content="Rsbuild + Vue + Vant 移动端应用">
+  <title>Express App</title>
+  
+  <!-- 首屏样式：定义主题颜色，防止闪白屏 -->
+  <style>
+    /* 统一配置：主题颜色 */
+    :root {
+      /* 浅色模式（默认） */
+      --first-screen-bg-light: #f7f8fa;
+      --first-screen-text-light: #323233;
+      /* 深色模式 */
+      --first-screen-bg-dark: #141414;
+      --first-screen-text-dark: #e5e5e5;
+    }
+    
+    /* 禁用过渡，避免闪烁 */
+    html {
+      transition: none !important;
+    }
+    
+    /* 应用主题颜色 */
+    html.light {
+      background-color: var(--first-screen-bg-light);
+      color: var(--first-screen-text-light);
+    }
+    html.dark {
+      background-color: var(--first-screen-bg-dark);
+      color: var(--first-screen-text-dark);
+    }
+    
+    body {
+      margin: 0;
+      padding: 0;
+    }
+    #root {
+      width: 100%;
+      height: 100%;
+    }
+  </style>
+  
+  <!-- 防止深色模式闪白屏：在页面渲染前立即应用主题 -->
+  <script>
+    (function() {
+      // 从 localStorage 读取主题设置
+      const storedMode = localStorage.getItem('app-theme-mode') || 'auto';
+      
+      // 解析实际主题
+      let theme = storedMode;
+      if (storedMode === 'auto') {
+        theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      }
+      
+      // 立即应用主题类（颜色由 CSS 变量控制）
+      const root = document.documentElement;
+      root.classList.add(theme);
+      root.setAttribute('data-theme', theme);
+    })();
+  </script>
+</head>
+<body>
+  <div id="root"></div>
+</body>
+</html>
+

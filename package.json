@@ -1,0 +1,31 @@
+{
+  "name": "express",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "rsbuild build",
+    "check": "biome check --write",
+    "dev": "rsbuild dev --open",
+    "format": "biome format --write",
+    "preview": "rsbuild preview",
+    "android:check": "./android-check.sh",
+    "android:dev": "npx @tauri-apps/cli android dev",
+    "android:build": "npx @tauri-apps/cli android build",
+    "android:build:release": "npx @tauri-apps/cli android build --release"
+  },
+  "dependencies": {
+    "pinia": "^3.0.3",
+    "vant": "^4.9.21",
+    "vue": "^3.5.22"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.2.3",
+    "@rsbuild/core": "^1.6.0",
+    "@rsbuild/plugin-vue": "^1.2.0",
+    "@tauri-apps/cli": "^2.9.2",
+    "@vant/auto-import-resolver": "^1.3.0",
+    "typescript": "^5.9.3",
+    "unplugin-vue-components": "^30.0.0"
+  }
+}
