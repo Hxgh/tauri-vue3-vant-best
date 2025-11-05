@@ -27,7 +27,15 @@ class MainActivity : TauriActivity() {
     // 延迟获取 WebView 并注入 Bridge
     handler.postDelayed({
       webView = findWebView(window.decorView)
-      webView?.addJavascriptInterface(ThemeBridge(), "AndroidTheme")
+      webView?.let { wv ->
+        // 禁用缩放功能
+        wv.settings.apply {
+          builtInZoomControls = false
+          displayZoomControls = false
+          setSupportZoom(false)
+        }
+        wv.addJavascriptInterface(ThemeBridge(), "AndroidTheme")
+      }
       startThemeMonitoring()
     }, 500)
   }
