@@ -5,7 +5,6 @@
   "identifier": "com.express.app",
   "build": {
     "frontendDist": "../dist",
-    "devUrl": "http://localhost:1420",
     "beforeDevCommand": "",
     "beforeBuildCommand": "pnpm build"
   },

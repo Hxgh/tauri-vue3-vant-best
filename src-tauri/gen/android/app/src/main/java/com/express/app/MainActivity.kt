@@ -28,11 +28,14 @@ class MainActivity : TauriActivity() {
     handler.postDelayed({
       webView = findWebView(window.decorView)
       webView?.let { wv ->
-        // 禁用缩放功能
+        // 配置 WebView
         wv.settings.apply {
+          // 禁用缩放功能
           builtInZoomControls = false
           displayZoomControls = false
           setSupportZoom(false)
+          // 启用 DOM Storage (localStorage/sessionStorage)
+          domStorageEnabled = true
         }
         wv.addJavascriptInterface(ThemeBridge(), "AndroidTheme")
       }
