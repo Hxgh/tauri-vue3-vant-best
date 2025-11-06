@@ -2,7 +2,8 @@
   box-sizing: border-box;
 }
 
-html, body {
+html,
+body {
   margin: 0;
   padding: 0;
   width: 100%;
@@ -16,7 +17,18 @@ html, body {
 
 body {
   color: var(--color-text-primary);
-  font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Helvetica, Segoe UI, Arial, Roboto, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft Yahei', sans-serif;
+  font-family:
+    -apple-system,
+    BlinkMacSystemFont,
+    "Helvetica Neue",
+    Helvetica,
+    Segoe UI,
+    Arial,
+    Roboto,
+    "PingFang SC",
+    "Hiragino Sans GB",
+    "Microsoft Yahei",
+    sans-serif;
   background-color: var(--color-bg-secondary);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;

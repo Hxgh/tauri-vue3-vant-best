@@ -3,39 +3,43 @@
  * 适用于 iOS 刘海屏、Android 异形屏等设备
  */
 
+/* biome-ignore lint/correctness/noUnknownFunction: constant() is for iOS 11.0-11.2 compatibility */
+/* biome-ignore lint/suspicious/noDuplicateCustomProperties: Progressive enhancement for older iOS */
 :root {
   /* 安全区域变量（兼容 iOS 11.0-11.2 的 constant() 和标准 env()） */
   --sat: constant(safe-area-inset-top, 0px);
   --sat: env(safe-area-inset-top, 0px);
-  
+
   --sab: constant(safe-area-inset-bottom, 0px);
   --sab: env(safe-area-inset-bottom, 0px);
-  
+
   --sal: constant(safe-area-inset-left, 0px);
   --sal: env(safe-area-inset-left, 0px);
-  
+
   --sar: constant(safe-area-inset-right, 0px);
   --sar: env(safe-area-inset-right, 0px);
-  
+
   /* 兜底值：某些 Android 设备 env() 返回 0，需要最小安全距离 */
   --sab-fallback: max(var(--sab), 20px);
-  
+
   /* Vant 组件高度常量 */
   --navbar-height: 46px;
   --tabbar-height: 50px;
-  
+
   /* 包含安全区域的总高度 */
   --navbar-total-height: calc(var(--navbar-height) + var(--sat));
   --tabbar-total-height: calc(var(--tabbar-height) + var(--sab-fallback));
-  
+
   /* 内容区域高度（有顶部和底部导航） */
   --content-height-full: calc(
-    100vh - var(--navbar-total-height) - var(--tabbar-total-height)
+    100vh -
+    var(--navbar-total-height) -
+    var(--tabbar-total-height)
   );
-  
+
   /* 内容区域高度（仅有顶部导航） */
   --content-height-with-navbar: calc(100vh - var(--navbar-total-height));
-  
+
   /* 内容区域高度（仅有底部导航） */
   --content-height-with-tabbar: calc(100vh - var(--tabbar-total-height));
 }
@@ -106,4 +110,3 @@ body {
     overscroll-behavior: contain;
   }
 }
-

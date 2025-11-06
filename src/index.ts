@@ -1,5 +1,5 @@
-import { createApp } from 'vue';
 import { createPinia } from 'pinia';
+import { createApp } from 'vue';
 import App from './App.vue';
 import './index.css';
 import './styles/safe-area.css';

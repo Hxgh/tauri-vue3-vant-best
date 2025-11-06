@@ -9,7 +9,7 @@ class MainActivity : TauriActivity() {
     enableEdgeToEdge()
     super.onCreate(savedInstanceState)
     
-    // 延迟加载 dev 服务器（让 Tauri 初始化完成）
+    // 开发模式：延迟加载开发服务器的最新代码（支持热更新）
     Thread {
       Thread.sleep(1000)
       loadDevServer()
@@ -17,14 +17,11 @@ class MainActivity : TauriActivity() {
   }
 
   private fun loadDevServer() {
-    // 开发调试模式：让 WebView 加载开发服务器的最新代码
-    // 这样可以实现热更新，无需每次都重新打包 APK
     runOnUiThread {
       val webView = findWebView()
       webView?.settings?.apply {
         mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
       }
-      // 连接到开发服务器，获取最新前端代码
       webView?.loadUrl("http://192.168.3.81:1420")
     }
   }
@@ -46,3 +43,4 @@ class MainActivity : TauriActivity() {
     return null
   }
 }
+
