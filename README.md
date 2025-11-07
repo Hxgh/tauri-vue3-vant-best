@@ -1,175 +1,152 @@
 # Express App
 
-一个使用 Tauri + Vue 3 + Vant 构建的跨平台移动应用示例。
+基于 Tauri + Vue 3 + Vant 的跨平台移动应用。
 
-## 🚀 快速开始
+## 特性
 
-### Web 开发
+- 🎨 **主题系统**：浅色/深色/跟随系统，与 Android 系统栏完美同步
+- 📱 **布局系统**：5 种布局模式，2 个工具组件
+- 🛡️ **安全区域适配**：自动处理刘海屏和 Home Indicator
+- ⚡ **开发体验**：热重载、TypeScript、Biome
 
-```bash
-pnpm dev      # 启动开发服务器（http://localhost:1420）
-pnpm build    # 构建生产版本
-pnpm preview  # 预览生产构建
-```
+## 快速开始
 
-### Android 开发
-
-```bash
-# 开发模式（热更新）
-./scripts/build-android.sh dev
-
-# 生产模式（硬打包）
-./scripts/build-android.sh release
-```
-
-### 环境检查
+### 开发模式
 
 ```bash
-./scripts/android-check.sh
+# 启动 Web 开发服务器
+npm run dev
+
+# 构建并安装到 Android（需先启动 dev server）
+npm run build:android:dev
 ```
 
-## 📁 项目结构
+### 生产构建
+
+```bash
+# 构建前端资源
+npm run build
+
+# 构建并安装生产版 APK
+npm run build:android:prod
+```
+
+## 布局系统
+
+### 5 种模式
+
+| 模式 | 配置 | 示例 | 适用场景 |
+|------|------|------|----------|
+| 1 | `Standard` + `BelowHeader` + `Standard` | Page2 | 标准列表页 |
+| 2 | `None` + `SafeArea` + `Standard` | Page3 | 无导航首页 |
+| 3 | `Standard` + `BelowHeader` + `None` | DetailPage | 详情页 + 固定按钮 |
+| 4 | `None` + `ScreenTop` + `Immersive` | LoginPage/VideoPage | 登录/视频/全屏 |
+
+**详见：** [docs/LAYOUT_SYSTEM.md](docs/LAYOUT_SYSTEM.md)
+
+### 工具组件
+
+**FixedBottom** - 固定底部按钮（有背景）
+
+```vue
+<FixedBottom>
+  <van-button type="primary">提交</van-button>
+</FixedBottom>
+```
+
+**ImmersiveNavbar / ImmersiveBottomBar** - 沉浸式透明导航栏（无背景）
+
+```vue
+<!-- 顶部 -->
+<ImmersiveNavbar>
+  <template #title>
+    <span style="color: white;">标题</span>
+  </template>
+</ImmersiveNavbar>
+
+<!-- 底部 -->
+<ImmersiveBottomBar>
+  <van-icon name="play" color="white" />
+</ImmersiveBottomBar>
+```
+
+## 主题系统
+
+### 三种模式
+
+```typescript
+themeStore.setMode('auto');   // 跟随系统（推荐）
+themeStore.setMode('dark');   // 强制深色
+themeStore.setMode('light');  // 强制浅色
+```
+
+### 架构
+
+- **CSS 层**：`@media (prefers-color-scheme: dark)` + `data-theme` 属性
+- **JavaScript 层**：Pinia Store 管理状态
+- **Android 层**：双向同步（Web ↔ Android）
+
+**详见：** [docs/THEME_SYSTEM.md](docs/THEME_SYSTEM.md)
+
+## 技术栈
+
+- **前端**：Vue 3 + TypeScript + Vant 4
+- **构建**：Rsbuild (Rspack)
+- **状态管理**：Pinia
+- **移动端**：Tauri 2
+- **代码规范**：Biome
+
+## 开发命令
+
+```bash
+# Web 开发
+npm run dev          # 启动开发服务器
+npm run build        # 构建生产版本
+npm run preview      # 预览生产构建
+
+# 代码质量
+npm run lint         # 检查代码
+npm run check        # 检查并自动修复
+npm run format       # 格式化代码
+
+# Android 构建
+npm run build:android:dev   # 开发模式（热更新）
+npm run build:android:prod  # 生产模式（硬打包）
+```
+
+## 项目结构
 
 ```
 express/
-├── src/                  # 前端源代码（Vue 3 + TypeScript）
-├── src-tauri/           # Tauri 后端（Rust）
-├── scripts/             # 构建脚本
-│   ├── build-android.sh # 统一 Android 构建脚本
-│   └── templates/       # 构建模板（dev/release）
-├── docs/                # 文档
-├── dist/                # 构建产物
-├── AGENTS.md            # 项目规范
-└── package.json         # 依赖配置
+├── src/
+│   ├── components/          # 公共组件
+│   │   ├── FixedBottom.vue
+│   │   ├── ImmersiveNavbar.vue
+│   │   └── ImmersiveBottomBar.vue
+│   ├── layouts/             # 布局组件
+│   │   └── MainLayout.vue
+│   ├── pages/               # 页面
+│   ├── stores/              # 状态管理
+│   └── styles/              # 全局样式
+├── src-tauri/               # Tauri 后端
+│   └── gen/android/         # Android 项目
+├── scripts/                  # 构建脚本
+│   ├── build-android.sh
+│   └── templates/
+├── docs/                     # 文档
+│   ├── LAYOUT_SYSTEM.md
+│   ├── THEME_SYSTEM.md
+│   └── BUILD_ANDROID.md
+└── SUMMARY.md                # 功能总结
 ```
 
-## ✨ 主要特性
+## 文档
 
-- 🎨 **Vant UI 4.9** - 完整的移动端组件库
-- 📱 **安全区域适配** - 支持 iPhone 刘海屏和 Android 异形屏
-- 🌓 **深色/浅色主题** - 跟随系统或用户自定义
-- 🔥 **热重载开发** - 修改代码后自动刷新
-- 📦 **Tauri 应用** - 原生性能 + Web 开发体验
+- [布局系统](docs/LAYOUT_SYSTEM.md) - 5 种布局模式详解
+- [主题系统](docs/THEME_SYSTEM.md) - 主题配置和 Android 同步
+- [Android 构建](docs/BUILD_ANDROID.md) - 构建指南
+- [功能总结](SUMMARY.md) - 完整功能总结
 
-## 📚 文档
+## License
 
-详细文档请访问 [`docs/`](./docs) 目录：
-
-- **[快速开始](./docs/QUICK_START.md)** - 3 分钟入门
-- **[Android 调试](./docs/ANDROID_DEBUG.md)** - 完整调试指南
-- **[构建脚本](./scripts/README.md)** - 脚本使用说明
-- **[移动端配置](./docs/MOBILE_SETUP.md)** - 响应式设计
-- **[主题配置](./docs/THEME_CONFIG.md)** - 深色模式
-
-## 🛠️ 构建脚本
-
-统一的 Android 构建脚本支持两种模式：
-
-| 模式 | 命令 | 特点 |
-|------|------|------|
-| **开发** | `./scripts/build-android.sh dev` | 加载开发服务器，支持热更新 |
-| **生产** | `./scripts/build-android.sh release` | 硬打包资源，无需服务器 |
-
-脚本会自动处理：
-- ✅ 环境检查和清理
-- ✅ 模板切换（dev/release MainActivity）
-- ✅ APK 构建和安装
-- ✅ 应用启动
-
-详见 [`scripts/README.md`](./scripts/README.md)
-
-## 🔧 技术栈
-
-### 前端
-
-- **Vue 3** - 渐进式 JavaScript 框架
-- **TypeScript** - 类型安全
-- **Vant** - 移动端 UI 库
-- **Pinia** - 状态管理
-- **Rsbuild** - 构建工具
-
-### 后端
-
-- **Tauri 2** - 轻量级应用框架
-- **Rust** - 高性能系统语言
-- **WebView** - 跨平台 Web 容器
-
-### 开发工具
-
-- **Biome** - 代码检查和格式化
-- **Gradle** - Android 构建系统
-- **ADB** - Android 调试工具
-
-## 🎯 工作流
-
-### 日常开发
-
-```bash
-# 终端 1：启动 Web 开发服务器
-pnpm dev
-
-# 终端 2：打包并在手机上运行
-./scripts/build-android.sh dev
-
-# 修改代码 → 手机自动刷新（无需重新打包）
-```
-
-### 发布流程
-
-```bash
-# 1. 构建生产版本
-./scripts/build-android.sh release
-
-# 2. 在手机上测试
-# 3. 准备发布（签名等）
-```
-
-## 📱 支持的平台
-
-- ✅ **Web** - 任何现代浏览器
-- ✅ **Android** - 7.0 及以上
-- 🏗️ **iOS** - 规划中
-- 🏗️ **macOS/Windows** - 规划中
-
-## 🐛 问题排查
-
-### 遇到构建问题？
-
-1. 检查环境：`./scripts/android-check.sh`
-2. 查看构建脚本说明：[`scripts/README.md`](./scripts/README.md)
-3. 详细调试指南：[`docs/ANDROID_DEBUG.md`](./docs/ANDROID_DEBUG.md)
-
-### 常见错误
-
-| 错误 | 解决方案 |
-|------|---------|
-| 手机未连接 | 检查 USB 连接，开启 USB 调试 |
-| Gradle 锁定 | 脚本会自动清理（如果问题持续，手动运行 `./scripts/android-check.sh`） |
-| 构建失败 | 查看详细日志，参考 [`docs/ANDROID_DEBUG.md`](./docs/ANDROID_DEBUG.md) |
-
-## 📖 参考资源
-
-- [Tauri 官方文档](https://tauri.app/zh-cn/)
-- [Vue 3 文档](https://vuejs.org/)
-- [Vant 文档](https://vant-ui.github.io/vant/)
-- [Rsbuild 文档](https://rsbuild.dev/)
-
-## 📝 规范
-
-项目遵循 [`AGENTS.md`](./AGENTS.md) 中的编码规范。
-
-主要工具：
-- 代码检查：`pnpm lint`
-- 代码格式化：`pnpm format`
-- 类型检查：`pnpm check`
-
-## 📄 许可
-
-MIT License
-
----
-
-**版本**: v0.1.0  
-**最后更新**: 2025-11-06
-
-🚀 **开始开发**：连接手机并运行 `./scripts/build-android.sh dev`
+MIT

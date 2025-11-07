@@ -11,14 +11,23 @@ export {}
 /* prettier-ignore */
 declare module 'vue' {
   export interface GlobalComponents {
+    AppTabbar: typeof import('./src/components/AppTabbar.vue')['default']
+    FixedBottom: typeof import('./src/components/FixedBottom.vue')['default']
+    ImmersiveBottomBar: typeof import('./src/components/ImmersiveBottomBar.vue')['default']
+    ImmersiveNavbar: typeof import('./src/components/ImmersiveNavbar.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
+    VanButton: typeof import('vant/es')['Button']
     VanCell: typeof import('vant/es')['Cell']
     VanCellGroup: typeof import('vant/es')['CellGroup']
+    VanField: typeof import('vant/es')['Field']
     VanIcon: typeof import('vant/es')['Icon']
     VanNavBar: typeof import('vant/es')['NavBar']
     VanPopup: typeof import('vant/es')['Popup']
+    VanRadio: typeof import('vant/es')['Radio']
+    VanRadioGroup: typeof import('vant/es')['RadioGroup']
     VanTabbar: typeof import('vant/es')['Tabbar']
     VanTabbarItem: typeof import('vant/es')['TabbarItem']
+    VanTag: typeof import('vant/es')['Tag']
   }
 }

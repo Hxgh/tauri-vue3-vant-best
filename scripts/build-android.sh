@@ -138,17 +138,14 @@ if [ "$BUILD_MODE" = "dev" ]; then
     
     # 4b. 构建 APK（开发模式）
     info "构建 APK..."
-    cd "$ANDROID_DIR"
+    cd "$PROJECT_ROOT"
     
-    # 先进行前端构建
-    info "前端资源已准备"
-    
-    # 使用 Gradle 构建，添加重试逻辑处理 npm 错误
+    # 使用 Tauri CLI 构建（会正确处理开发服务器）
     MAX_ATTEMPTS=3
     ATTEMPT=1
     while [ $ATTEMPT -le $MAX_ATTEMPTS ]; do
         info "构建尝试 $ATTEMPT/$MAX_ATTEMPTS..."
-        if ./gradlew clean assembleUniversalDebug --no-daemon --stacktrace; then
+        if npx @tauri-apps/cli android build --debug; then
             success "构建成功"
             break
         fi
@@ -168,7 +165,18 @@ if [ "$BUILD_MODE" = "dev" ]; then
         exit 1
     fi
     
-    APK_PATH="$ANDROID_DIR/app/build/outputs/apk/universal/debug/app-universal-debug.apk"
+    # Tauri CLI 构建的 APK 路径（aarch64-only）
+    APK_PATH="$ANDROID_DIR/app/build/outputs/apk/arm64/debug/app-arm64-debug.apk"
+    
+    # 如果不存在，尝试 universal APK
+    if [ ! -f "$APK_PATH" ]; then
+        APK_PATH="$ANDROID_DIR/app/build/outputs/apk/universal/debug/app-universal-debug.apk"
+    fi
+    
+    if [ ! -f "$APK_PATH" ]; then
+        error "未找到 APK 文件"
+        exit 1
+    fi
     
     # 5a. 卸载旧版本
     info "卸载旧版本..."
@@ -214,60 +222,41 @@ else
     
     info "使用 apksigner: $APKSIGNER"
     
-    # 5b. 移除 devUrl（硬打包模式）
-    info "配置硬打包模式..."
-    TAURI_CONF="$PROJECT_ROOT/src-tauri/tauri.conf.json"
-    BACKUP_CONF="$PROJECT_ROOT/src-tauri/tauri.conf.json.backup"
-    
-    cp "$TAURI_CONF" "$BACKUP_CONF"
-    sed -i '' '/"devUrl":/d' "$TAURI_CONF"
-    
-    # 设置脚本退出时恢复 tauri.conf.json
-    cleanup_tauri_conf() {
-        if [ -f "$BACKUP_CONF" ]; then
-            mv "$BACKUP_CONF" "$TAURI_CONF"
-            info "已恢复 tauri.conf.json"
-        fi
-    }
-    trap cleanup_tauri_conf EXIT
-    
-    success "已移除 devUrl（强制使用本地资源）"
-    
-    # 6b. 使用 Tauri CLI 构建
+    # 5b. 使用 Tauri CLI 构建（它会自动处理 beforeBuildCommand）
     info "构建 APK..."
     cd "$PROJECT_ROOT"
-    npx @tauri-apps/cli android build --apk true
     
-    # 7b. 签名 APK
-    UNSIGNED_APK="$ANDROID_DIR/app/build/outputs/apk/universal/release/app-universal-release-unsigned.apk"
-    SIGNED_APK="$ANDROID_DIR/app/build/outputs/apk/universal/release/app-signed.apk"
+    # Tauri CLI 会自动：
+    # 1. 执行 beforeBuildCommand (pnpm build)
+    # 2. 使用构建好的资源（无 devUrl 时自动使用打包资源）
+    # 3. 构建 debug 签名的 APK（可直接安装测试）
+    npx @tauri-apps/cli android build
     
-    if [ ! -f "$UNSIGNED_APK" ]; then
-        error "APK 文件不存在: $UNSIGNED_APK"
+    # 6b. 查找生成的 APK
+    APK_PATH="$ANDROID_DIR/app/build/outputs/apk/arm64/debug/app-arm64-debug.apk"
+    
+    # 如果不存在，尝试 universal APK
+    if [ ! -f "$APK_PATH" ]; then
+        APK_PATH="$ANDROID_DIR/app/build/outputs/apk/universal/debug/app-universal-debug.apk"
+    fi
+    
+    if [ ! -f "$APK_PATH" ]; then
+        error "APK 文件不存在"
         exit 1
     fi
     
-    info "签名 APK..."
-    $APKSIGNER sign \
-        --ks ~/.android/debug.keystore \
-        --ks-key-alias AndroidDebugKey \
-        --ks-pass pass:android \
-        --key-pass pass:android \
-        --out "$SIGNED_APK" \
-        "$UNSIGNED_APK"
+    success "APK 构建完成: $APK_PATH"
     
-    success "APK 签名完成"
-    
-    # 8b. 卸载旧版本
+    # 7b. 卸载旧版本
     info "卸载旧版本..."
     adb uninstall com.express.app 2>/dev/null || true
     
-    # 9b. 安装
+    # 8b. 安装
     info "安装到手机..."
-    adb install -r "$SIGNED_APK"
+    adb install -r "$APK_PATH"
     success "安装完成"
     
-    # 10b. 启动
+    # 9b. 启动
     info "启动应用..."
     adb shell am start -n com.express.app/.MainActivity
     success "应用已启动"
@@ -275,12 +264,13 @@ else
     # 显示信息
     echo ""
     echo "========================================="
-    success "硬打包完成！"
+    success "生产模式构建完成！"
     echo "========================================="
     echo ""
-    echo "📦 APK: $SIGNED_APK"
+    echo "📦 APK: $APK_PATH"
     echo "📱 设备: $DEVICE"
-    echo "💾 大小: $(du -h "$SIGNED_APK" | awk '{print $1}')"
+    echo "💾 大小: $(du -h "$APK_PATH" | awk '{print $1}')"
+    echo "💡 提示: 此版本包含所有前端资源，无需开发服务器"
     echo ""
 fi
 

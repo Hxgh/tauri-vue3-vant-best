@@ -1,12 +1,16 @@
 import { createPinia } from 'pinia';
-import { createApp } from 'vue';
+import { createApp, nextTick } from 'vue';
 import App from './App.vue';
+import router from './router/index';
+
+// 引入 Vant 全局样式（先加载，避免覆盖主题）
+import 'vant/lib/index.css';
+
+// 引入应用样式（按顺序加载）
 import './index.css';
 import './styles/safe-area.css';
 import './styles/theme.css';
-
-// 引入 Vant 全局样式
-import 'vant/lib/index.css';
+import './styles/layout.css';
 
 // 引入主题 store
 import { useThemeStore } from './stores/theme';
@@ -15,9 +19,14 @@ const pinia = createPinia();
 const app = createApp(App);
 
 app.use(pinia);
+app.use(router);
 
-// 在挂载前初始化主题（确保首屏无闪烁）
-const themeStore = useThemeStore();
-themeStore.initTheme();
-
+// 先挂载应用，确保 DOM 准备好
 app.mount('#root');
+
+// DOM 挂载后初始化主题（确保 matchMedia 正确工作）
+// 使用 nextTick 确保 Vue 渲染完成
+nextTick(() => {
+  const themeStore = useThemeStore();
+  themeStore.initTheme();
+});

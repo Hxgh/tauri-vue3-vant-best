@@ -1,0 +1,187 @@
+# 项目架构规则
+
+## 布局系统
+
+### 5 种模式
+
+| 模式 | 配置 | 示例页面 | MainLayout 自动处理 |
+|------|------|---------|-------------------|
+| 1 | `Standard` + `BelowHeader` + `Standard` | Page2 | `padding-top`: Header + SafeArea<br>`padding-bottom`: Tabbar + SafeArea |
+| 2 | `None` + `SafeArea` + `Standard` | Page3 | 固定占位 + `padding-top`: SafeArea<br>`padding-bottom`: Tabbar + SafeArea |
+| 3 | `Standard` + `BelowHeader` + `None` | DetailPage | `padding-top`: Header + SafeArea<br>`padding-bottom`: SafeArea |
+| 4 | `None` + `ScreenTop` + `Immersive` | LoginPage/VideoPage | 无 padding（完全沉浸式） |
+
+**核心原则：**
+- `Immersive`：不处理安全区域，内容覆盖整屏
+- 其他情况：内容都在安全区域内
+
+### 工具组件
+
+**FixedBottom** - 固定底部容器（有背景、有边框）
+- 用于详情页固定按钮
+- 自动处理底部安全区域 + 最小 20px
+- `z-index: 100`
+
+**ImmersiveNavbar** - 沉浸式顶部导航栏（透明、无边框）
+- 用于完全沉浸式页面
+- 自动处理顶部安全区域
+- 支持 slots: `left`, `title`, `right`
+- `z-index: 1000`
+
+**ImmersiveBottomBar** - 沉浸式底部控制栏（透明、无边框）
+- 用于完全沉浸式页面
+- 自动处理底部安全区域
+- 支持 slot: `default`
+- `z-index: 1000`
+
+---
+
+## 主题系统
+
+### 三种模式
+
+```typescript
+themeStore.setMode('auto');   // 跟随系统
+themeStore.setMode('dark');   // 强制深色
+themeStore.setMode('light');  // 强制浅色
+```
+
+### CSS 层机制
+
+- `auto`：不设置 `[data-theme]`，`@media (prefers-color-scheme: dark)` 生效
+- `light/dark`：设置 `[data-theme]`，用 `!important` 覆盖
+- `.van-theme-dark`：始终根据最终主题添加/移除，Vant 组件依赖
+
+### Android 双向同步
+
+- **Web → Android：** `window.ThemeBridge.onThemeChanged(theme)` → 更新系统栏图标颜色
+- **Android → Web：** `onConfigurationChanged` / `onResume` → 注入 `window.__ANDROID_SYSTEM_THEME__` → 触发 `__FORCE_THEME_CHECK__`
+
+### 一致性原则
+
+深色/浅色只是颜色相反，其他处理完全一致：
+- 系统栏透明：`enableEdgeToEdge()`
+- 禁用 Contrast 强制：`isNavigationBarContrastEnforced = false`
+- 动态图标颜色：深色 → 浅色图标，浅色 → 深色图标
+
+---
+
+## 安全区域处理
+
+### CSS 变量
+
+```css
+--sat: env(safe-area-inset-top)
+--sab: env(safe-area-inset-bottom)
+```
+
+### MainLayout 处理逻辑
+
+- `ContentStart.SafeArea`：固定占位元素（`position: fixed`，不占流）+ 内容 `padding-top: var(--sat)`
+- `TabbarMode.None`：自动添加 `padding-bottom: max(var(--sab), 20px)`
+- `TabbarMode.Immersive`：不添加任何 padding
+
+### 手动处理场景
+
+完全沉浸式页面（`ContentStart.ScreenTop` + `TabbarMode.Immersive`）需手动处理：
+- 使用 `ImmersiveNavbar` 和 `ImmersiveBottomBar` 组件
+- 或手动添加 `padding-top: env(safe-area-inset-top)` / `padding-bottom: env(safe-area-inset-bottom)`
+
+---
+
+## 文档规则
+
+### 核心文档（必须同步更新）
+
+- `README.md` - 项目总览
+- `SUMMARY.md` - 功能总结
+- `docs/LAYOUT_SYSTEM.md` - 布局系统详解（含图示）
+- `docs/THEME_SYSTEM.md` - 主题系统详解
+- `docs/BUILD_ANDROID.md` - 构建指南
+- `src/components/README.md` - 公共组件说明
+- `src/pages/test/README.md` - 测试页面说明
+
+### 文档维护原则
+
+- **精简而不遗漏**：去掉冗余示例，保留核心信息
+- **代码即文档**：变量/样式定义不需要额外文档
+- **删除重复**：同一内容不出现在多个文档
+- **删除过时**：功能变更立即删除或更新对应文档
+
+### 禁止创建的文档类型
+
+- 变量参考表（如 `variables-reference.md`）
+- 过于详细的技术实现文档（如 `ANDROID_THEME_SYNC.md`）
+- 重复的快速开始指南
+
+---
+
+## 构建脚本
+
+### Android 构建
+
+```bash
+npm run build:android:dev    # 开发模式（连接 dev server）
+npm run build:android:prod   # 生产模式（打包资源）
+```
+
+### 模板系统
+
+- `scripts/templates/MainActivity/dev.kt` - 开发模式模板
+- `scripts/templates/MainActivity/release.kt` - 生产模式模板
+- 脚本自动切换，构建后恢复原始版本
+
+---
+
+## Tauri 命令
+
+### open_map_navigation
+
+地图导航跳转，支持原生唤起 + 自动 Fallback。
+
+**参数：**
+- `lat: number` - 纬度
+- `lng: number` - 经度
+- `name: string` - 地点名称
+- `appType: 'amap' | 'baidu' | 'tencent'` - 地图类型
+
+**返回：**
+```typescript
+{ success: boolean, message: string }
+```
+
+**机制：**
+- Android/iOS：先用 Scheme 唤起原生 App，失败则打开网页版
+- 桌面端：直接打开网页版
+
+---
+
+## 关键文件
+
+| 文件 | 说明 | 修改后必须检查 |
+|------|------|--------------|
+| `src/layouts/MainLayout.vue` | 统一布局管理 | `docs/LAYOUT_SYSTEM.md` |
+| `src/components/*.vue` | 工具组件 | `src/components/README.md` |
+| `src/stores/theme.ts` | 主题状态管理 | `docs/THEME_SYSTEM.md` |
+| `src/styles/theme.css` | 主题 CSS 变量 | - |
+| `src-tauri/src/lib.rs` | Tauri 命令 | `src/types/tauri.d.ts` |
+| `src-tauri/capabilities/default.json` | 权限配置 | - |
+| `scripts/build-android.sh` | 构建脚本 | `docs/BUILD_ANDROID.md` |
+| `scripts/templates/MainActivity/*.kt` | Android 模板 | `docs/THEME_SYSTEM.md` |
+
+---
+
+## Vant 组件覆盖
+
+深色模式必须同时：
+1. 添加 `.van-theme-dark` 类到 `<html>`
+2. 在 `theme.css` 中覆盖对应组件的 CSS 变量
+
+示例：
+```css
+:root[data-theme="dark"] {
+  --van-tabbar-background: #1e1e1e !important;
+  --van-nav-bar-background: #1e1e1e !important;
+}
+```
+

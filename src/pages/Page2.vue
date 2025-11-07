@@ -1,5 +1,15 @@
 <template>
-  <div class="page2">
+  <MainLayout 
+    :header-mode="HeaderMode.Standard"
+    :content-start="ContentStart.BelowHeader"
+    :tabbar-mode="TabbarMode.Standard"
+    header-title="发现"
+  >
+    <template #tabbar>
+      <AppTabbar />
+    </template>
+
+    <div class="page2">
     <div class="content-wrapper safe-area-horizontal">
       <!-- 欢迎信息 -->
       <div class="welcome-card">
@@ -33,10 +43,14 @@
       </van-cell-group>
     </div>
   </div>
+  </MainLayout>
 </template>
 
 <script setup lang="ts">
 import { showDialog, showNotify, showToast } from 'vant';
+import MainLayout from '@/layouts/MainLayout.vue';
+import AppTabbar from '@/components/AppTabbar.vue';
+import { HeaderMode, ContentStart, TabbarMode } from '@/types/layout';
 
 const showNotifyFunc = () => {
   showNotify({ type: 'success', message: '通知内容' });

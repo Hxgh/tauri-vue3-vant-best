@@ -1,39 +1,90 @@
 <template>
-  <div class="page1">
+  <MainLayout 
+    :header-mode="HeaderMode.None"
+    :content-start="ContentStart.ScreenTop"
+    :tabbar-mode="TabbarMode.Standard"
+  >
+    <template #tabbar>
+      <AppTabbar />
+    </template>
+
+    <div class="page1">
     <!-- 内容延伸至屏幕顶部（避开状态栏） -->
     <div class="hero-section">
       <div class="hero-content safe-area-horizontal">
-        <h1>12321页2222222面1</h1>
-        <p>无Header，内容延伸至屏幕顶部</p>
-        <p class="subtitle">状态栏区域已自动避开</p>
+        <h1>首页</h1>
+        <p>布局系统测试与演示</p>
+        <p class="subtitle">无Header，内容延伸至屏幕顶部</p>
       </div>
     </div>
 
     <div class="content-section safe-area-horizontal">
-      <!-- 功能演示卡片 -->
-      <van-cell-group inset title="页面特性" style="margin-top: 16px;">
+      <!-- 布局测试入口 -->
+      <van-cell-group inset title="🎨 布局系统测试" style="margin-top: 16px;">
+        <van-cell 
+          title="主题测试"
+          label="测试深浅色切换"
+          icon="eye-o"
+          is-link
+          @click="goToTest('theme')"
+        />
+        <van-cell 
+          title="标准详情页"
+          label="有 Header + 固定按钮 + 自动安全区域"
+          icon="description"
+          is-link
+          @click="goToTest('detail')"
+        />
+        <van-cell 
+          title="完全沉浸式（登录页）"
+          label="内容覆盖整屏，手动处理安全区域"
+          icon="contact"
+          is-link
+          @click="goToTest('login')"
+        />
+        <van-cell 
+          title="完全沉浸式（视频页）"
+          label="视频全屏，控制栏浮动"
+          icon="video"
+          is-link
+          @click="goToTest('video')"
+        />
+      </van-cell-group>
+
+      <!-- 功能测试入口 -->
+      <van-cell-group inset title="🚀 功能测试" style="margin-top: 16px;">
+        <van-cell 
+          title="地图跳转测试"
+          label="原生唤起地图 + 自动 Fallback"
+          icon="location-o"
+          is-link
+          @click="goToTest('map')"
+        />
+      </van-cell-group>
+
+      <!-- 页面特性 -->
+      <van-cell-group inset title="当前页面特性" style="margin-top: 16px;">
         <van-cell title="Header" value="无" />
         <van-cell title="内容区域" value="延伸至顶部" />
         <van-cell title="状态栏" value="自动避开" />
-        <van-cell title="背景色" value="渐变背景" />
-      </van-cell-group>
-
-      <!-- 示例列表 -->
-      <van-cell-group inset title="示例内容" style="margin-top: 16px;">
-        <van-cell 
-          v-for="i in 10" 
-          :key="i" 
-          :title="`列表项 ${i}`" 
-          :value="`值 ${i}`"
-          is-link
-        />
+        <van-cell title="Tabbar" value="标准 Tabbar" />
       </van-cell-group>
     </div>
   </div>
+  </MainLayout>
 </template>
 
 <script setup lang="ts">
-// 页面1：无Header，内容延伸至屏幕顶部（避开状态栏）
+import { useRouter } from 'vue-router';
+import MainLayout from '@/layouts/MainLayout.vue';
+import AppTabbar from '@/components/AppTabbar.vue';
+import { HeaderMode, ContentStart, TabbarMode } from '@/types/layout';
+
+const router = useRouter();
+
+function goToTest(page: string) {
+  router.push(`/test/${page}`);
+}
 </script>
 
 <style scoped>

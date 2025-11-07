@@ -1,0 +1,25 @@
+/**
+ * Layout 全局样式
+ * 同时支持系统自动切换和手动切换
+ */
+
+/* 沉浸式 Header 深色模式 - 跟随系统 */
+@media (prefers-color-scheme: dark) {
+  .header-immersive {
+    background: linear-gradient(
+      to bottom,
+      rgba(30, 30, 30, 0.95),
+      rgba(30, 30, 30, 0.98)
+    ) !important;
+  }
+}
+
+/* 沉浸式 Header 深色模式 - 手动切换 */
+.van-theme-dark .header-immersive {
+  background: linear-gradient(
+    to bottom,
+    rgba(30, 30, 30, 0.95),
+    rgba(30, 30, 30, 0.98)
+  ) !important;
+}
+

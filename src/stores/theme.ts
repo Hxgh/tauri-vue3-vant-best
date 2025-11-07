@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia';
-import { ref, watch } from 'vue';
+import { ref } from 'vue';
 
 /**
  * 主题类型
@@ -17,13 +17,36 @@ export type ResolvedTheme = 'light' | 'dark';
 const STORAGE_KEY = 'app-theme-mode';
 
 /**
+ * 扩展 Window 接口以包含 Android 注入的主题
+ */
+declare global {
+  interface Window {
+    __ANDROID_SYSTEM_THEME__?: 'light' | 'dark';
+    __FORCE_THEME_CHECK__?: () => void;
+  }
+}
+
+/**
  * 获取系统主题偏好
  */
 function getSystemTheme(): ResolvedTheme {
   if (typeof window === 'undefined') return 'light';
-  return window.matchMedia('(prefers-color-scheme: dark)').matches
-    ? 'dark'
-    : 'light';
+  
+  try {
+    // 优先使用 Android 注入的系统主题（更可靠）
+    if (window.__ANDROID_SYSTEM_THEME__) {
+      console.log('[Theme] Using Android injected theme:', window.__ANDROID_SYSTEM_THEME__);
+      return window.__ANDROID_SYSTEM_THEME__;
+    }
+    
+    // 回退到 matchMedia 检测
+    const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    console.log('[Theme] System theme detected via matchMedia:', isDark ? 'dark' : 'light');
+    return isDark ? 'dark' : 'light';
+  } catch (error) {
+    console.error('[Theme] Failed to detect system theme:', error);
+    return 'light';
+  }
 }
 
 /**
@@ -62,16 +85,26 @@ function resolveTheme(mode: ThemeMode): ResolvedTheme {
 function applyTheme(theme: ResolvedTheme, mode: ThemeMode) {
   const root = document.documentElement;
 
+  console.log('[Theme] Applying theme:', { theme, mode, hasClass: root.classList.contains('van-theme-dark') });
+
+  // 根据解析后的主题添加或移除 Vant 深色模式类名
+  // 注意：auto 模式下也需要类名，Vant 组件依赖它来显示深色样式
   if (theme === 'dark') {
-    root.classList.add('dark');
-    root.classList.remove('light');
+    root.classList.add('van-theme-dark');
   } else {
-    root.classList.add('light');
-    root.classList.remove('dark');
+    root.classList.remove('van-theme-dark');
   }
 
-  // 设置 CSS 变量供其他组件使用
-  root.setAttribute('data-theme', theme);
+  // 设置或移除 data-theme 属性
+  if (mode === 'auto') {
+    // auto 模式：移除 data-theme，让 @media 查询处理 CSS 变量
+    root.removeAttribute('data-theme');
+  } else {
+    // 手动模式：设置 data-theme，覆盖系统主题
+    root.setAttribute('data-theme', theme);
+  }
+
+  console.log('[Theme] Applied theme:', { theme, mode, hasClass: root.classList.contains('van-theme-dark'), dataTheme: root.getAttribute('data-theme') || 'auto' });
 
   // 同步到 Android 系统栏（如果在 Android 环境中）
   syncToAndroid(theme, mode);
@@ -123,8 +156,8 @@ export const useThemeStore = defineStore('theme', () => {
   // 状态：实际应用的主题
   const resolvedTheme = ref<ResolvedTheme>(resolveTheme(mode.value));
 
-  // 立即应用主题（在 store 创建时）
-  applyTheme(resolvedTheme.value, mode.value);
+  // 注意：不在这里立即应用主题，等待 initTheme() 调用
+  // 这样可以确保 DOM 和 WebView 完全准备好
 
   /**
    * 设置主题模式
@@ -161,7 +194,10 @@ export const useThemeStore = defineStore('theme', () => {
     const handleChange = (e: MediaQueryListEvent) => {
       if (mode.value === 'auto') {
         resolvedTheme.value = e.matches ? 'dark' : 'light';
-        applyTheme(resolvedTheme.value, mode.value);
+        // auto 模式下，只更新 resolvedTheme 和 data-theme 属性
+        // CSS 媒体查询会自动应用样式
+        document.documentElement.setAttribute('data-theme', resolvedTheme.value);
+        syncToAndroid(resolvedTheme.value, mode.value);
       }
     };
 
@@ -175,18 +211,44 @@ export const useThemeStore = defineStore('theme', () => {
   }
 
   /**
+   * 监听应用恢复（从后台返回前台）
+   */
+  function setupAppResumeListener() {
+    if (typeof window === 'undefined') return;
+
+    window.addEventListener('app-resume', () => {
+      // 重新检查并应用主题
+      resolvedTheme.value = resolveTheme(mode.value);
+      applyTheme(resolvedTheme.value, mode.value);
+    });
+  }
+
+  /**
+   * 强制重新检查系统主题（由 Android 调用）
+   */
+  function forceThemeCheck() {
+    console.log('[Theme] Force theme check triggered by Android');
+    if (mode.value === 'auto') {
+      resolvedTheme.value = resolveTheme('auto');
+      applyTheme(resolvedTheme.value, mode.value);
+    }
+  }
+
+  /**
    * 初始化主题
    */
   function initTheme() {
+    console.log('[Theme] Initializing theme system');
+    
+    // 暴露强制检查函数给 Android
+    if (typeof window !== 'undefined') {
+      window.__FORCE_THEME_CHECK__ = forceThemeCheck;
+    }
+    
     applyTheme(resolvedTheme.value, mode.value);
     setupSystemThemeListener();
+    setupAppResumeListener();
   }
-
-  // 监听 mode 变化
-  watch(mode, (newMode) => {
-    resolvedTheme.value = resolveTheme(newMode);
-    applyTheme(resolvedTheme.value, newMode);
-  });
 
   return {
     // 状态

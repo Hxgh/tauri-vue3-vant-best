@@ -8,11 +8,10 @@
     "check": "biome check --write",
     "dev": "rsbuild dev --open",
     "format": "biome format --write",
+    "lint": "biome check",
     "preview": "rsbuild preview",
-    "android:check": "./android-check.sh",
-    "android:dev": "npx @tauri-apps/cli android dev",
-    "android:build": "npx @tauri-apps/cli android build",
-    "android:build:release": "npx @tauri-apps/cli android build --release"
+    "build:android:dev": "./scripts/build-android.sh dev",
+    "build:android:prod": "./scripts/build-android.sh release"
   },
   "dependencies": {
     "@tauri-apps/api": "^2.9.0",

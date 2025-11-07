@@ -1,13 +1,19 @@
 <template>
-  <div class="page3">
-    <!-- 顶部占位（和 Page2 的 Header 高度一致，确保内容不会滚动到安全区域） -->
-    <div class="header-placeholder"></div>
-    
-    <!-- 顶部背景延伸区域 -->
+  <MainLayout 
+    :header-mode="HeaderMode.None"
+    :content-start="ContentStart.SafeArea"
+    :tabbar-mode="TabbarMode.Standard"
+  >
+    <template #tabbar>
+      <AppTabbar />
+    </template>
+
+    <div class="page3">
+    <!-- MainLayout 已处理顶部安全区域，hero-banner 作为内容的一部分，从安全区域下开始 -->
     <div class="hero-banner">
       <div class="hero-content safe-area-horizontal">
-        <h1>页面32222222</h1>
-        <p>无Header，类似 Page2 但无顶栏</p>
+        <h1>设置</h1>
+        <p>主题设置与页面控制</p>
       </div>
     </div>
 
@@ -52,9 +58,9 @@
       <!-- 页面特性 -->
       <van-cell-group inset title="页面特性" style="margin-top: 16px;">
         <van-cell title="Header" value="无" />
-        <van-cell title="内容区域" value="从安全区域内开始" />
-        <van-cell title="布局方式" value="无Header但遵守安全区域" />
-        <van-cell title="主题切换" value="已迁移到此页" />
+        <van-cell title="内容区域" value="从安全区域下开始" />
+        <van-cell title="布局方式" value="Banner延伸到顶部" />
+        <van-cell title="滚动区域" value="内容区域内部滚动" />
       </van-cell-group>
 
       <!-- 安全区域说明 -->
@@ -127,6 +133,7 @@
       </div>
     </van-popup>
   </div>
+  </MainLayout>
 </template>
 
 <script setup lang="ts">
@@ -134,6 +141,9 @@ import { showToast } from 'vant';
 import { computed, ref } from 'vue';
 import type { ThemeMode } from '../stores/theme';
 import { useThemeStore } from '../stores/theme';
+import MainLayout from '@/layouts/MainLayout.vue';
+import AppTabbar from '@/components/AppTabbar.vue';
+import { HeaderMode, ContentStart, TabbarMode } from '@/types/layout';
 
 const themeStore = useThemeStore();
 const showThemePicker = ref(false);
@@ -213,12 +223,6 @@ const scrollToTop = () => {
 .page3 {
   min-height: 100%;
   background-color: var(--color-bg-secondary);
-}
-
-/* 顶部占位（和 Page2 的 Header 高度一致：46px） */
-.header-placeholder {
-  height: 46px;
-  background-color: transparent;
 }
 
 /* Hero Banner */
