@@ -232,12 +232,12 @@ else
     # 3. 构建 debug 签名的 APK（可直接安装测试）
     npx @tauri-apps/cli android build
     
-    # 6b. 查找生成的 APK
-    APK_PATH="$ANDROID_DIR/app/build/outputs/apk/arm64/debug/app-arm64-debug.apk"
+    # 6b. 查找生成的 APK（release 版本是 unsigned）
+    APK_PATH="$ANDROID_DIR/app/build/outputs/apk/arm64/release/app-arm64-release-unsigned.apk"
     
     # 如果不存在，尝试 universal APK
     if [ ! -f "$APK_PATH" ]; then
-        APK_PATH="$ANDROID_DIR/app/build/outputs/apk/universal/debug/app-universal-debug.apk"
+        APK_PATH="$ANDROID_DIR/app/build/outputs/apk/universal/release/app-universal-release-unsigned.apk"
     fi
     
     if [ ! -f "$APK_PATH" ]; then
