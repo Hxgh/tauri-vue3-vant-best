@@ -210,21 +210,17 @@ class MainActivity : TauriActivity() {
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
       // Android 11+ 使用新 API
       window.insetsController?.let { controller ->
+        val mask = WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS or 
+                   WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS
+        
         if (isDark) {
-          // 深色主题：使用浅色图标
-          controller.setSystemBarsAppearance(
-            0,
-            WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS or 
-            WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS
-          )
+          // 深色主题：使用浅色图标（清除 LIGHT 标志）
+          android.util.Log.d("MainActivity", "Setting system bars to dark theme (light icons)")
+          controller.setSystemBarsAppearance(0, mask)
         } else {
-          // 浅色主题：使用深色图标
-          controller.setSystemBarsAppearance(
-            WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS or 
-            WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS,
-            WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS or 
-            WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS
-          )
+          // 浅色主题：使用深色图标（设置 LIGHT 标志）
+          android.util.Log.d("MainActivity", "Setting system bars to light theme (dark icons)")
+          controller.setSystemBarsAppearance(mask, mask)
         }
       }
     } else {
@@ -234,6 +230,7 @@ class MainActivity : TauriActivity() {
       if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
         controller.isAppearanceLightNavigationBars = !isDark
       }
+      android.util.Log.d("MainActivity", "Setting system bars (legacy API): isDark=$isDark")
     }
   }
 
