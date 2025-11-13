@@ -35,11 +35,8 @@ const MAP_PACKAGES: Record<'amap' | 'baidu' | 'tencent', string> = {
   tencent: 'com.tencent.map',
 };
 
-// 缓存已检查过的地图应用（包括已安装和未安装）
-const checkedMapsCache = ref<Map<'amap' | 'baidu' | 'tencent', boolean>>(new Map());
-
 /**
- * 检查 Android 是否安装了指定的地图应用
+ * 检查 Android 是否安装了指定的地图应用（实时检查，无缓存）
  * @param mapType 地图类型
  * @returns 是否已安装
  */
@@ -53,20 +50,11 @@ export async function checkMapInstalled(
     return true;
   }
 
-  // 如果已检查过，直接返回缓存结果
-  if (checkedMapsCache.value.has(mapType)) {
-    return checkedMapsCache.value.get(mapType) || false;
-  }
-
   try {
-    // 优先使用 Android Bridge 方法
+    // 优先使用 Android Bridge 方法（同步，极快）
     if (window.AndroidMap) {
       const packageName = MAP_PACKAGES[mapType];
-      const isInstalled = window.AndroidMap.isAppInstalled(packageName);
-
-      // 缓存检查结果
-      checkedMapsCache.value.set(mapType, isInstalled);
-      return isInstalled;
+      return window.AndroidMap.isAppInstalled(packageName);
     }
 
     // Fallback: 通过 Tauri 命令检查（保持向后兼容）
@@ -74,14 +62,10 @@ export async function checkMapInstalled(
       appType: mapType,
     });
 
-    // 缓存检查结果
-    checkedMapsCache.value.set(mapType, result.installed);
     return result.installed;
   } catch (error) {
     // 如果检查失败，默认返回 false（不显示该地图）
     console.error('[MapCheck] Failed to check map installation:', error);
-    // 缓存失败结果
-    checkedMapsCache.value.set(mapType, false);
     return false;
   }
 }
