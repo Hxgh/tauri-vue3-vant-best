@@ -118,50 +118,52 @@ function handleTabClick(index: number) {
  * 核心逻辑：根据 headerMode、contentStart、tabbarMode 计算 padding
  */
 // biome-ignore lint/correctness/noUnusedVariables: used in template via v-bind
-const contentStyle = computed<{ paddingTop: string; paddingBottom: string }>(() => {
-  let paddingTop = '0';
-  let paddingBottom = '0';
+const contentStyle = computed<{ paddingTop: string; paddingBottom: string }>(
+  () => {
+    let paddingTop = '0';
+    let paddingBottom = '0';
 
-  // ==================== 顶部 Padding ====================
-  if (props.headerMode === HeaderMode.None) {
-    // 无 Header
-    if (props.contentStart === ContentStart.SafeArea) {
-      // 有固定的 .safe-area-spacer 占位元素（不可滚动），content-wrapper 需要 padding 避开它
-      paddingTop = 'var(--sat)';
-    } else if (props.contentStart === ContentStart.ScreenTop) {
-      paddingTop = '0'; // 从屏幕顶部开始
-    }
-  } else {
-    // 有 Header
-    if (props.contentStart === ContentStart.BelowHeader) {
-      if (props.headerMode === HeaderMode.Standard) {
-        // 标准 Header：Header 高度 + 状态栏高度
-        paddingTop = 'calc(46px + var(--sat))';
-      } else if (props.headerMode === HeaderMode.Immersive) {
-        // 沉浸式 Header：仅 Header 高度（Header 已包含状态栏）
-        paddingTop = '46px';
+    // ==================== 顶部 Padding ====================
+    if (props.headerMode === HeaderMode.None) {
+      // 无 Header
+      if (props.contentStart === ContentStart.SafeArea) {
+        // 有固定的 .safe-area-spacer 占位元素（不可滚动），content-wrapper 需要 padding 避开它
+        paddingTop = 'var(--sat)';
+      } else if (props.contentStart === ContentStart.ScreenTop) {
+        paddingTop = '0'; // 从屏幕顶部开始
+      }
+    } else {
+      // 有 Header
+      if (props.contentStart === ContentStart.BelowHeader) {
+        if (props.headerMode === HeaderMode.Standard) {
+          // 标准 Header：Header 高度 + 状态栏高度
+          paddingTop = 'calc(46px + var(--sat))';
+        } else if (props.headerMode === HeaderMode.Immersive) {
+          // 沉浸式 Header：仅 Header 高度（Header 已包含状态栏）
+          paddingTop = '46px';
+        }
       }
     }
-  }
 
-  // ==================== 底部 Padding ====================
-  if (props.tabbarMode === TabbarMode.Standard) {
-    // 有 Tabbar：Tabbar 高度 + 底部安全区域（最小 20px）
-    paddingBottom = 'calc(50px + max(var(--sab), 20px))';
-  } else if (props.tabbarMode === TabbarMode.None) {
-    // 无 Tabbar：只添加底部安全区域（不含 Tabbar 高度）
-    // 让内容在安全区域内，但没有 Tabbar 占位
-    paddingBottom = 'max(var(--sab), 20px)';
-  } else if (props.tabbarMode === TabbarMode.Immersive) {
-    // 完全沉浸式：内容延伸到底部，不添加任何 padding
-    paddingBottom = '0';
-  }
+    // ==================== 底部 Padding ====================
+    if (props.tabbarMode === TabbarMode.Standard) {
+      // 有 Tabbar：Tabbar 高度 + 底部安全区域（最小 20px）
+      paddingBottom = 'calc(50px + max(var(--sab), 20px))';
+    } else if (props.tabbarMode === TabbarMode.None) {
+      // 无 Tabbar：只添加底部安全区域（不含 Tabbar 高度）
+      // 让内容在安全区域内，但没有 Tabbar 占位
+      paddingBottom = 'max(var(--sab), 20px)';
+    } else if (props.tabbarMode === TabbarMode.Immersive) {
+      // 完全沉浸式：内容延伸到底部，不添加任何 padding
+      paddingBottom = '0';
+    }
 
-  return {
-    paddingTop,
-    paddingBottom,
-  };
-});
+    return {
+      paddingTop,
+      paddingBottom,
+    };
+  },
+);
 </script>
 
 <style scoped>

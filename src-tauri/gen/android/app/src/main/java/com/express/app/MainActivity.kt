@@ -6,6 +6,7 @@ import android.os.Bundle
 import android.view.View
 import android.view.WindowInsetsController
 import android.webkit.JavascriptInterface
+import android.webkit.WebSettings
 import android.webkit.WebView
 import androidx.activity.enableEdgeToEdge
 import androidx.core.view.WindowCompat
@@ -25,12 +26,12 @@ class MainActivity : TauriActivity() {
     // 设置初始的系统栏颜色（跟随系统主题）
     updateSystemBarsForTheme(isSystemDarkMode())
     
-    // 生产模式：使用打包的本地资源（无热更新）
-    // Tauri 会自动加载 dist 目录中的资源
-    
-    // 异步设置 Bridge（带重试机制，减少延迟）
+    // 开发模式：异步加载开发服务器（减少延迟）
     Thread {
-      Thread.sleep(200)
+      // 优化：减少延迟时间
+      Thread.sleep(300)
+      loadDevServer()
+      // 设置 Bridge（带重试机制）
       setupThemeBridgeWithRetry()
     }.start()
   }
@@ -107,6 +108,48 @@ class MainActivity : TauriActivity() {
     )
   }
 
+  private fun loadDevServer() {
+    runOnUiThread {
+      val webView = findWebView()
+      webView?.settings?.apply {
+        mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
+        // 启用 JavaScript（确保 Bridge 可用）
+        javaScriptEnabled = true
+      }
+      
+      // 设置 WebViewClient 以在页面加载完成后注入主题
+      webView?.webViewClient = object : android.webkit.WebViewClient() {
+        override fun onPageFinished(view: android.webkit.WebView?, url: String?) {
+          super.onPageFinished(view, url)
+          
+          // 页面加载完成后，立即注入系统主题
+          val isDark = isSystemDarkMode()
+          val themeInfo = if (isDark) "dark" else "light"
+          android.util.Log.d("MainActivity", "Page loaded, injecting system theme: $themeInfo")
+          
+          view?.evaluateJavascript(
+            """
+            (function() {
+              window.__ANDROID_SYSTEM_THEME__ = '$themeInfo';
+              console.log('[Android] System theme injected on page load:', '$themeInfo');
+              
+              // 如果 theme store 已经初始化，强制重新检查
+              setTimeout(function() {
+                if (window.__FORCE_THEME_CHECK__) {
+                  window.__FORCE_THEME_CHECK__();
+                }
+              }, 100);
+            })();
+            """.trimIndent(),
+            null
+          )
+        }
+      }
+      
+      webView?.loadUrl("http://192.168.3.81:1420")
+    }
+  }
+
   /**
    * 设置 JavaScript Bridge（带重试机制）
    */
@@ -154,40 +197,59 @@ class MainActivity : TauriActivity() {
   /**
    * 更新系统栏（状态栏和导航栏）的图标颜色
    * @param isDark 是否为深色主题
-   * 
+   *
    * 深浅色配置一致性原则：
    * - 深色主题 = 浅色图标
    * - 浅色主题 = 深色图标
-   * 
+   *
    * 注意：enableEdgeToEdge() 已经处理了系统栏透明度，
    * 这里只需要设置图标颜色即可
    */
   private fun updateSystemBarsForTheme(isDark: Boolean) {
+    android.util.Log.d("MainActivity", "updateSystemBarsForTheme called: isDark=$isDark")
+
     // 设置图标颜色（深浅色相反）
+    var success = false
+
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-      // Android 11+ 使用新 API
-      window.insetsController?.let { controller ->
-        val mask = WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS or 
-                   WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS
-        
-        if (isDark) {
-          // 深色主题：使用浅色图标（清除 LIGHT 标志）
-          android.util.Log.d("MainActivity", "Setting system bars to dark theme (light icons)")
-          controller.setSystemBarsAppearance(0, mask)
-        } else {
-          // 浅色主题：使用深色图标（设置 LIGHT 标志）
-          android.util.Log.d("MainActivity", "Setting system bars to light theme (dark icons)")
-          controller.setSystemBarsAppearance(mask, mask)
+      // Android 11+ 优先使用新 API
+      val controller = window.insetsController
+      if (controller != null) {
+        try {
+          val mask = WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS or
+                     WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS
+
+          if (isDark) {
+            // 深色主题：使用浅色图标（清除 LIGHT 标志）
+            android.util.Log.d("MainActivity", "[New API] Setting system bars to dark theme (light icons)")
+            controller.setSystemBarsAppearance(0, mask)
+          } else {
+            // 浅色主题：使用深色图标（设置 LIGHT 标志）
+            android.util.Log.d("MainActivity", "[New API] Setting system bars to light theme (dark icons)")
+            controller.setSystemBarsAppearance(mask, mask)
+          }
+          success = true
+          android.util.Log.d("MainActivity", "[New API] System bars updated successfully")
+        } catch (e: Exception) {
+          android.util.Log.e("MainActivity", "[New API] Failed to update system bars", e)
         }
+      } else {
+        android.util.Log.w("MainActivity", "[New API] window.insetsController is null, falling back to compat API")
       }
-    } else {
-      // Android 10 及以下使用旧 API
-      val controller = WindowCompat.getInsetsController(window, window.decorView)
-      controller.isAppearanceLightStatusBars = !isDark
-      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-        controller.isAppearanceLightNavigationBars = !isDark
+    }
+
+    // 如果新 API 失败或不可用，使用兼容 API 作为回退
+    if (!success) {
+      try {
+        val controller = WindowCompat.getInsetsController(window, window.decorView)
+        controller.isAppearanceLightStatusBars = !isDark
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+          controller.isAppearanceLightNavigationBars = !isDark
+        }
+        android.util.Log.d("MainActivity", "[Compat API] System bars updated: isAppearanceLightStatusBars=${!isDark}")
+      } catch (e: Exception) {
+        android.util.Log.e("MainActivity", "[Compat API] Failed to update system bars", e)
       }
-      android.util.Log.d("MainActivity", "Setting system bars (legacy API): isDark=$isDark")
     }
   }
 

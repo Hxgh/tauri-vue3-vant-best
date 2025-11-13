@@ -1,0 +1,20 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(tree:*)",
+      "Bash(npm run build:android:dev:*)",
+      "Bash(npm run build:android:prod:*)",
+      "Bash(adb devices:*)",
+      "Bash(adb logcat:*)",
+      "Bash(timeout 5 adb logcat:*)",
+      "Bash(adb install:*)",
+      "Bash(adb shell am start:*)",
+      "Bash(./scripts/build-android.sh:*)",
+      "Bash(pnpm build:*)",
+      "Bash(npx @tauri-apps/cli android build)",
+      "Bash(adb shell am:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

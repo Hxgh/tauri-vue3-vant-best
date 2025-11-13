@@ -1,8 +1,7 @@
 <script setup lang="ts">
-import { ref } from 'vue';
-import { invoke } from '@tauri-apps/api/core';
-import { showToast, showLoadingToast, closeToast } from 'vant';
 import { useRouter } from 'vue-router';
+import MainLayout from '@/layouts/MainLayout.vue';
+import MapNavigationButton from '@/components/MapNavigationButton.vue';
 import { HeaderMode, ContentStart, TabbarMode } from '@/types/layout';
 
 const router = useRouter();
@@ -21,62 +20,9 @@ const testLocations = [
   },
 ];
 
-const selectedLocationIndex = ref(0);
-const selectedMapType = ref('amap');
-
-const mapTypes = [
-  { label: '高德地图', value: 'amap' },
-  { label: '百度地图', value: 'baidu' },
-  { label: '腾讯地图', value: 'tencent' },
-];
-
-interface MapResult {
-  success: boolean;
-  message: string;
-}
-
-const openMap = async () => {
-  const location = testLocations[selectedLocationIndex.value];
-  
-  const toast = showLoadingToast({
-    message: '正在打开地图...',
-    forbidClick: true,
-    duration: 0,
-  });
-
-  try {
-    const result = await invoke<MapResult>('open_map_navigation', {
-      lat: location.lat,
-      lng: location.lng,
-      name: location.name,
-      appType: selectedMapType.value,
-    });
-
-    closeToast();
-
-    if (result.success) {
-      showToast({
-        message: result.message,
-        icon: 'success',
-      });
-    } else {
-      showToast({
-        message: result.message,
-        icon: 'info',
-      });
-    }
-  } catch (error) {
-    closeToast();
-    showToast({
-      message: error as string,
-      icon: 'fail',
-    });
-  }
-};
-
-const goBack = () => {
+function goBack() {
   router.back();
-};
+}
 </script>
 
 <template>
@@ -85,62 +31,59 @@ const goBack = () => {
     :content-start="ContentStart.BelowHeader"
     :tabbar-mode="TabbarMode.None"
     header-title="地图跳转测试"
-    :show-back="true"
-    @back="goBack"
   >
+    <template #header-left>
+      <van-icon name="arrow-left" @click="goBack" />
+    </template>
+
     <div class="map-test-page">
-      <van-cell-group inset title="选择目的地">
-        <van-radio-group v-model="selectedLocationIndex">
-          <van-cell
-            v-for="(location, index) in testLocations"
-            :key="location.name"
-            clickable
-            @click="selectedLocationIndex = index"
-          >
-            <template #title>
-              <span class="location-name">{{ location.name }}</span>
-            </template>
-            <template #right-icon>
-              <van-radio :name="index" />
-            </template>
-          </van-cell>
-        </van-radio-group>
-      </van-cell-group>
-
-      <van-cell-group inset title="选择地图应用">
-        <van-radio-group v-model="selectedMapType">
-          <van-cell
-            v-for="map in mapTypes"
-            :key="map.value"
-            clickable
-            @click="selectedMapType = map.value"
-          >
-            <template #title>
-              <span class="map-name">{{ map.label }}</span>
-            </template>
-            <template #right-icon>
-              <van-radio :name="map.value" />
-            </template>
-          </van-cell>
-        </van-radio-group>
-      </van-cell-group>
-
-      <van-cell-group inset title="功能说明">
-        <van-cell title="原生唤起" label="优先尝试唤起原生地图 App" />
-        <van-cell title="自动 Fallback" label="未安装时自动打开网页版" />
-        <van-cell title="跨平台支持" label="Android / iOS / 桌面端" />
-      </van-cell-group>
-
-      <div class="action-area">
-        <van-button type="primary" block @click="openMap">
-          打开地图导航
-        </van-button>
+      <div class="header-info">
+        <van-tag type="primary">地图导航</van-tag>
+        <h2>MapNavigationButton 组件</h2>
+        <p class="subtitle">组件化地图导航方案</p>
       </div>
 
-      <van-cell-group inset title="当前配置">
-        <van-cell title="目的地" :value="testLocations[selectedLocationIndex].name" />
-        <van-cell title="经纬度" :value="`${testLocations[selectedLocationIndex].lat}, ${testLocations[selectedLocationIndex].lng}`" />
-        <van-cell title="地图类型" :value="mapTypes.find(m => m.value === selectedMapType)?.label" />
+      <van-cell-group inset title="组件示例">
+        <div v-for="location in testLocations" :key="location.name" style="padding: 16px; border-bottom: 1px solid #eee;">
+          <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px;">
+            <div style="flex: 1;">
+              <div style="font-weight: 500; margin-bottom: 4px;">{{ location.name }}</div>
+              <div style="font-size: 12px; color: #999;">{{ location.lat }}, {{ location.lng }}</div>
+            </div>
+            <MapNavigationButton
+              :lat="location.lat"
+              :lng="location.lng"
+              :name="location.name"
+            >
+              <van-button size="small" type="primary">
+                导航
+              </van-button>
+            </MapNavigationButton>
+          </div>
+        </div>
+      </van-cell-group>
+
+      <van-cell-group inset title="功能特性">
+        <van-cell>
+          <template #title>
+            <div class="feature-text">
+              <p>✅ 组件化方案 - 无需写死代码</p>
+              <p>✅ 支持自定义内容包裹</p>
+              <p>✅ 自动检测地图应用安装</p>
+              <p>✅ 未安装时自动 Fallback 到网页版</p>
+              <p>✅ 跨平台支持（Android/iOS/桌面）</p>
+            </div>
+          </template>
+        </van-cell>
+      </van-cell-group>
+
+      <van-cell-group inset title="滚动测试">
+        <van-cell 
+          v-for="i in 10" 
+          :key="i" 
+          :title="`测试项 ${i}`" 
+          :value="`值 ${i}`"
+        />
       </van-cell-group>
     </div>
   </MainLayout>
@@ -150,16 +93,32 @@ const goBack = () => {
 .map-test-page {
   min-height: 100%;
   background-color: var(--color-bg-secondary);
-  padding: 16px 0;
 }
 
-.location-name,
-.map-name {
-  font-weight: 500;
+.header-info {
+  background: var(--color-bg-primary);
+  padding: 24px;
+  text-align: center;
 }
 
-.action-area {
-  padding: 24px 16px;
+.header-info h2 {
+  margin: 12px 0 8px;
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.subtitle {
+  color: var(--color-text-secondary);
+  font-size: 14px;
+  margin: 4px 0;
+}
+
+.feature-text p {
+  margin: 8px 0;
+  color: var(--color-text-secondary);
+  font-size: 14px;
+  line-height: 1.6;
 }
 
 .van-cell-group {

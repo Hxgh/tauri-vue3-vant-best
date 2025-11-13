@@ -10,7 +10,7 @@ declare module '@tauri-apps/api/core' {
       lng: number;
       name: string;
       appType: 'amap' | 'baidu' | 'tencent';
-    }
+    },
   ): Promise<T>;
 }
 
@@ -18,4 +18,3 @@ export interface MapResult {
   success: boolean;
   message: string;
 }
-

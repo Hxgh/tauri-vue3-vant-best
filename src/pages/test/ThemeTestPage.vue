@@ -91,7 +91,9 @@ const themeStore = useThemeStore();
 
 const systemTheme = computed(() => {
   if (typeof window === 'undefined') return 'light';
-  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  return window.matchMedia('(prefers-color-scheme: dark)').matches
+    ? 'dark'
+    : 'light';
 });
 
 function goBack() {

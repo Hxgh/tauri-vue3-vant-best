@@ -50,7 +50,7 @@ export interface LayoutConfig {
 
 /**
  * 预设布局配置（可选使用，三个维度可以任意组合）
- * 
+ *
  * 注意：这些只是常见场景的快捷方式，
  * 你完全可以自由组合三个维度来满足任何需求！
  */
@@ -104,4 +104,3 @@ export const LayoutPresets = {
     tabbarMode: TabbarMode.Immersive,
   } as LayoutConfig,
 } as const;
-
