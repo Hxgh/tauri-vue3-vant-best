@@ -5,6 +5,16 @@
     <!-- AndroidTV support -->
     <uses-feature android:name="android.software.leanback" android:required="false" />
 
+    <!-- Package visibility for map apps (Android 11+) -->
+    <queries>
+        <!-- 高德地图 -->
+        <package android:name="com.autonavi.minimap" />
+        <!-- 百度地图 -->
+        <package android:name="com.baidu.BaiduMap" />
+        <!-- 腾讯地图 -->
+        <package android:name="com.tencent.map" />
+    </queries>
+
     <application
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"

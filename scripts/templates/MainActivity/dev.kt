@@ -177,6 +177,7 @@ class MainActivity : TauriActivity() {
       val webView = findWebView()
       if (webView != null) {
         webView.addJavascriptInterface(ThemeBridge(), "AndroidTheme")
+        webView.addJavascriptInterface(MapBridge(), "AndroidMap")
         setupWebViewConsole()
       } else if (attempt < maxAttempts) {
         Thread {
@@ -201,6 +202,21 @@ class MainActivity : TauriActivity() {
           else -> theme == "dark"
         }
         updateSystemBarsForTheme(isDark)
+      }
+    }
+  }
+
+  /**
+   * JavaScript Bridge：检查地图应用是否安装
+   */
+  inner class MapBridge {
+    @JavascriptInterface
+    fun isAppInstalled(packageName: String): Boolean {
+      return try {
+        packageManager.getPackageInfo(packageName, 0)
+        true
+      } catch (e: Exception) {
+        false
       }
     }
   }

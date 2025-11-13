@@ -2,6 +2,15 @@ import { ref, computed } from 'vue';
 import { invoke } from '@tauri-apps/api/core';
 import { showToast, showLoadingToast, closeToast } from 'vant';
 
+// Android Bridge 类型定义
+declare global {
+  interface Window {
+    AndroidMap?: {
+      isAppInstalled: (packageName: string) => boolean;
+    };
+  }
+}
+
 export interface MapApp {
   label: string;
   value: 'amap' | 'baidu' | 'tencent';
@@ -19,9 +28,15 @@ const MAP_APPS: MapApp[] = [
   { label: '腾讯地图', value: 'tencent', scheme: 'qqmap://' },
 ];
 
-// 缓存已检测的地图应用
-const installedMapsCache = ref<Set<string>>(new Set());
-const cacheInitialized = ref(false);
+// 地图应用包名映射
+const MAP_PACKAGES: Record<'amap' | 'baidu' | 'tencent', string> = {
+  amap: 'com.autonavi.minimap',
+  baidu: 'com.baidu.BaiduMap',
+  tencent: 'com.tencent.map',
+};
+
+// 缓存已检查过的地图应用（包括已安装和未安装）
+const checkedMapsCache = ref<Map<'amap' | 'baidu' | 'tencent', boolean>>(new Map());
 
 /**
  * 检查 Android 是否安装了指定的地图应用
@@ -38,33 +53,35 @@ export async function checkMapInstalled(
     return true;
   }
 
-  // 如果已缓存，直接返回
-  if (installedMapsCache.value.has(mapType)) {
-    return true;
-  }
-
-  // 检查是否已检查过但未安装
-  if (cacheInitialized.value && !installedMapsCache.value.has(mapType)) {
-    return false;
+  // 如果已检查过，直接返回缓存结果
+  if (checkedMapsCache.value.has(mapType)) {
+    return checkedMapsCache.value.get(mapType) || false;
   }
 
   try {
-    // 通过 Tauri 命令检查是否安装了地图应用
+    // 优先使用 Android Bridge 方法
+    if (window.AndroidMap) {
+      const packageName = MAP_PACKAGES[mapType];
+      const isInstalled = window.AndroidMap.isAppInstalled(packageName);
+
+      // 缓存检查结果
+      checkedMapsCache.value.set(mapType, isInstalled);
+      return isInstalled;
+    }
+
+    // Fallback: 通过 Tauri 命令检查（保持向后兼容）
     const result = await invoke<{ installed: boolean }>('check_map_installed', {
       appType: mapType,
     });
-    
-    if (result.installed) {
-      installedMapsCache.value.add(mapType);
-      cacheInitialized.value = true;
-      return true;
-    } else {
-      cacheInitialized.value = true;
-      return false;
-    }
+
+    // 缓存检查结果
+    checkedMapsCache.value.set(mapType, result.installed);
+    return result.installed;
   } catch (error) {
     // 如果检查失败，默认返回 false（不显示该地图）
-    cacheInitialized.value = true;
+    console.error('[MapCheck] Failed to check map installation:', error);
+    // 缓存失败结果
+    checkedMapsCache.value.set(mapType, false);
     return false;
   }
 }

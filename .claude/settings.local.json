@@ -12,7 +12,8 @@
       "Bash(./scripts/build-android.sh:*)",
       "Bash(pnpm build:*)",
       "Bash(npx @tauri-apps/cli android build)",
-      "Bash(adb shell am:*)"
+      "Bash(adb shell am:*)",
+      "Bash(adb shell pm list packages:*)"
     ],
     "deny": [],
     "ask": []
