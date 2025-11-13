@@ -136,6 +136,15 @@ if [ "$BUILD_MODE" = "dev" ]; then
         success "✅ 已连接到开发服务器"
     fi
     
+    # 4a-2. 更新 tauri.conf.json 中的 devUrl
+    info "更新 devUrl: $DEV_URL"
+    TAURI_CONF="$PROJECT_ROOT/src-tauri/tauri.conf.json"
+    if [ -f "$TAURI_CONF" ]; then
+        # 使用 sed 更新 devUrl
+        sed -i '' "s|\"devUrl\": \"[^\"]*\"|\"devUrl\": \"$DEV_URL\"|g" "$TAURI_CONF"
+        success "devUrl 已更新"
+    fi
+    
     # 4b. 构建 APK（开发模式）
     info "构建 APK..."
     cd "$PROJECT_ROOT"
@@ -233,6 +242,7 @@ else
     npx @tauri-apps/cli android build
     
     # 6b. 查找生成的 APK（release 版本是 unsigned）
+    # 优先使用 arm64 APK（更稳定）
     APK_PATH="$ANDROID_DIR/app/build/outputs/apk/arm64/release/app-arm64-release-unsigned.apk"
     
     # 如果不存在，尝试 universal APK
@@ -247,16 +257,35 @@ else
     
     success "APK 构建完成: $APK_PATH"
     
-    # 7b. 卸载旧版本
-    info "卸载旧版本..."
-    adb uninstall com.express.app 2>/dev/null || true
+    # 7b. 使用 apksigner 签名 APK（更稳定）
+    info "签名 APK..."
     
-    # 8b. 安装
+    # 使用 apksigner 进行签名
+    "$APKSIGNER" sign --ks ~/.android/debug.keystore \
+        --ks-pass pass:android \
+        --ks-key-alias androiddebugkey \
+        --key-pass pass:android \
+        "$APK_PATH"
+    
+    if [ $? -eq 0 ]; then
+        success "APK 签名成功"
+    else
+        error "APK 签名失败"
+        exit 1
+    fi
+    
+    # 8b. 卸载旧版本
+    info "卸载旧版本..."
+    # 忽略卸载错误，可能是应用未安装
+    adb uninstall com.express.app || true
+    sleep 1
+    
+    # 9b. 安装
     info "安装到手机..."
     adb install -r "$APK_PATH"
     success "安装完成"
     
-    # 9b. 启动
+    # 10b. 启动
     info "启动应用..."
     adb shell am start -n com.express.app/.MainActivity
     success "应用已启动"

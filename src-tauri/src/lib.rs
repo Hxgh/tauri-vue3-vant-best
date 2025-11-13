@@ -110,11 +110,53 @@ async fn open_map_navigation(
     }
 }
 
+#[derive(Debug, serde::Serialize)]
+struct CheckMapResult {
+    installed: bool,
+}
+
+#[tauri::command]
+#[cfg(target_os = "android")]
+fn check_map_installed(app_type: String) -> Result<CheckMapResult, String> {
+    use std::process::Command;
+    
+    let package_name = match app_type.as_str() {
+        "amap" => "com.autonavi.minimap",
+        "baidu" => "com.baidu.BaiduMap",
+        "tencent" => "com.tencent.map",
+        _ => return Err("不支持的地图类型".to_string()),
+    };
+    
+    // 通过 pm list packages 命令检查应用是否安装
+    match Command::new("pm")
+        .arg("list")
+        .arg("packages")
+        .output()
+    {
+        Ok(output) => {
+            let packages = String::from_utf8_lossy(&output.stdout);
+            let installed = packages.contains(&format!("package:{}", package_name));
+            Ok(CheckMapResult { installed })
+        }
+        Err(_) => {
+            // 如果命令失败，默认返回 false
+            Ok(CheckMapResult { installed: false })
+        }
+    }
+}
+
+#[tauri::command]
+#[cfg(not(target_os = "android"))]
+fn check_map_installed(_app_type: String) -> Result<CheckMapResult, String> {
+    // 非 Android 平台总是返回 true
+    Ok(CheckMapResult { installed: true })
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
-        .invoke_handler(tauri::generate_handler![open_map_navigation])
+        .invoke_handler(tauri::generate_handler![open_map_navigation, check_map_installed])
         .setup(|app| {
             if cfg!(debug_assertions) {
                 app.handle().plugin(
