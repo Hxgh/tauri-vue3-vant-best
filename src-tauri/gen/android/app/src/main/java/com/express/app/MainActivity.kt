@@ -6,7 +6,6 @@ import android.os.Bundle
 import android.view.View
 import android.view.WindowInsetsController
 import android.webkit.JavascriptInterface
-import android.webkit.WebSettings
 import android.webkit.WebView
 import androidx.activity.enableEdgeToEdge
 import androidx.core.view.WindowCompat
@@ -15,25 +14,40 @@ class MainActivity : TauriActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
     enableEdgeToEdge()
     super.onCreate(savedInstanceState)
-    
+
     // 禁用 Android 自动添加的对比度保护层（半透明 scrim）
     // 这是浅色模式下导航栏出现毛玻璃效果的根本原因
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
       window.isNavigationBarContrastEnforced = false
       window.isStatusBarContrastEnforced = false
     }
-    
+
     // 设置初始的系统栏颜色（跟随系统主题）
     updateSystemBarsForTheme(isSystemDarkMode())
-    
-    // 开发模式：异步加载开发服务器（减少延迟）
-    Thread {
-      // 优化：减少延迟时间
-      Thread.sleep(300)
-      loadDevServer()
-      // 设置 Bridge（带重试机制）
-      setupThemeBridgeWithRetry()
-    }.start()
+
+    // 生产模式：使用打包的本地资源（无热更新）
+    // Tauri 会自动加载 dist 目录中的资源
+
+    // ⚠️ 关键修复：必须在 WebView 加载 JavaScript 之前设置 Bridge
+    // 不能延迟，否则 JavaScript 会检测到 window.AndroidTheme 不存在并缓存该结果
+    setupThemeBridgeWithRetry(maxAttempts = 30, delayMs = 50)
+  }
+
+  /**
+   * 设置 WebView Console 输出到 Logcat（用于调试）
+   */
+  private fun setupWebViewConsole() {
+    runOnUiThread {
+      val webView = findWebView()
+      webView?.webChromeClient = object : android.webkit.WebChromeClient() {
+        override fun onConsoleMessage(consoleMessage: android.webkit.ConsoleMessage?): Boolean {
+          consoleMessage?.let {
+            android.util.Log.d("WebView", "[JS] ${it.message()}")
+          }
+          return true
+        }
+      }
+    }
   }
 
   private var isFirstResume = true
@@ -79,26 +93,20 @@ class MainActivity : TauriActivity() {
    */
   override fun onConfigurationChanged(newConfig: Configuration) {
     super.onConfigurationChanged(newConfig)
-    
+
     // 检测系统主题是否变化
-    val isNightMode = (newConfig.uiMode and Configuration.UI_MODE_NIGHT_MASK) == 
+    val isNightMode = (newConfig.uiMode and Configuration.UI_MODE_NIGHT_MASK) ==
                       Configuration.UI_MODE_NIGHT_YES
-    
-    val themeInfo = if (isNightMode) "dark" else "light"
-    android.util.Log.d("MainActivity", "Configuration changed, new theme: $themeInfo")
-    
+
     // 更新系统栏颜色
     updateSystemBarsForTheme(isNightMode)
-    
+
     // 通知 WebView 系统主题已变化
-    val webView = findWebView()
-    webView?.evaluateJavascript(
+    val themeInfo = if (isNightMode) "dark" else "light"
+    findWebView()?.evaluateJavascript(
       """
       (function() {
         window.__ANDROID_SYSTEM_THEME__ = '$themeInfo';
-        console.log('[Android] System theme changed:', '$themeInfo');
-        
-        // 触发强制检查
         if (window.__FORCE_THEME_CHECK__) {
           window.__FORCE_THEME_CHECK__();
         }
@@ -108,74 +116,25 @@ class MainActivity : TauriActivity() {
     )
   }
 
-  private fun loadDevServer() {
-    runOnUiThread {
-      val webView = findWebView()
-      webView?.settings?.apply {
-        mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
-        // 启用 JavaScript（确保 Bridge 可用）
-        javaScriptEnabled = true
-      }
-      
-      // 设置 WebViewClient 以在页面加载完成后注入主题
-      webView?.webViewClient = object : android.webkit.WebViewClient() {
-        override fun onPageFinished(view: android.webkit.WebView?, url: String?) {
-          super.onPageFinished(view, url)
-          
-          // 页面加载完成后，立即注入系统主题
-          val isDark = isSystemDarkMode()
-          val themeInfo = if (isDark) "dark" else "light"
-          android.util.Log.d("MainActivity", "Page loaded, injecting system theme: $themeInfo")
-          
-          view?.evaluateJavascript(
-            """
-            (function() {
-              window.__ANDROID_SYSTEM_THEME__ = '$themeInfo';
-              console.log('[Android] System theme injected on page load:', '$themeInfo');
-              
-              // 如果 theme store 已经初始化，强制重新检查
-              setTimeout(function() {
-                if (window.__FORCE_THEME_CHECK__) {
-                  window.__FORCE_THEME_CHECK__();
-                }
-              }, 100);
-            })();
-            """.trimIndent(),
-            null
-          )
-        }
-      }
-      
-      webView?.loadUrl("http://192.168.3.81:1420")
-    }
-  }
-
   /**
    * 设置 JavaScript Bridge（带重试机制）
+   * ⚠️ 关键：必须在 WebView 加载 JavaScript 之前完成设置
    */
-  private fun setupThemeBridgeWithRetry(attempt: Int = 0) {
+  private fun setupThemeBridgeWithRetry(attempt: Int = 0, maxAttempts: Int = 30, delayMs: Long = 50) {
     runOnUiThread {
       val webView = findWebView()
       if (webView != null) {
         webView.addJavascriptInterface(ThemeBridge(), "AndroidTheme")
         webView.addJavascriptInterface(MapBridge(), "AndroidMap")
-      } else if (attempt < 5) {
-        // 如果 WebView 还未准备好，延迟重试
+        setupWebViewConsole()
+      } else if (attempt < maxAttempts) {
         Thread {
-          Thread.sleep(100)
-          setupThemeBridgeWithRetry(attempt + 1)
+          Thread.sleep(delayMs)
+          setupThemeBridgeWithRetry(attempt + 1, maxAttempts, delayMs)
         }.start()
+      } else {
+        android.util.Log.e("MainActivity", "Failed to setup AndroidTheme Bridge after $maxAttempts attempts")
       }
-    }
-  }
-
-  /**
-   * 设置 JavaScript Bridge 用于主题同步
-   */
-  private fun setupThemeBridge() {
-    runOnUiThread {
-      val webView = findWebView()
-      webView?.addJavascriptInterface(ThemeBridge(), "AndroidTheme")
     }
   }
 
@@ -222,8 +181,6 @@ class MainActivity : TauriActivity() {
    * 这里只需要设置图标颜色即可
    */
   private fun updateSystemBarsForTheme(isDark: Boolean) {
-    android.util.Log.d("MainActivity", "updateSystemBarsForTheme called: isDark=$isDark")
-
     // 设置图标颜色（深浅色相反）
     var success = false
 
@@ -234,23 +191,13 @@ class MainActivity : TauriActivity() {
         try {
           val mask = WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS or
                      WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS
-
-          if (isDark) {
-            // 深色主题：使用浅色图标（清除 LIGHT 标志）
-            android.util.Log.d("MainActivity", "[New API] Setting system bars to dark theme (light icons)")
-            controller.setSystemBarsAppearance(0, mask)
-          } else {
-            // 浅色主题：使用深色图标（设置 LIGHT 标志）
-            android.util.Log.d("MainActivity", "[New API] Setting system bars to light theme (dark icons)")
-            controller.setSystemBarsAppearance(mask, mask)
-          }
+          // 深色主题：使用浅色图标（清除 LIGHT 标志）
+          // 浅色主题：使用深色图标（设置 LIGHT 标志）
+          controller.setSystemBarsAppearance(if (isDark) 0 else mask, mask)
           success = true
-          android.util.Log.d("MainActivity", "[New API] System bars updated successfully")
         } catch (e: Exception) {
-          android.util.Log.e("MainActivity", "[New API] Failed to update system bars", e)
+          android.util.Log.e("MainActivity", "Failed to update system bars (New API)", e)
         }
-      } else {
-        android.util.Log.w("MainActivity", "[New API] window.insetsController is null, falling back to compat API")
       }
     }
 
@@ -262,9 +209,8 @@ class MainActivity : TauriActivity() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
           controller.isAppearanceLightNavigationBars = !isDark
         }
-        android.util.Log.d("MainActivity", "[Compat API] System bars updated: isAppearanceLightStatusBars=${!isDark}")
       } catch (e: Exception) {
-        android.util.Log.e("MainActivity", "[Compat API] Failed to update system bars", e)
+        android.util.Log.e("MainActivity", "Failed to update system bars (Compat API)", e)
       }
     }
   }
