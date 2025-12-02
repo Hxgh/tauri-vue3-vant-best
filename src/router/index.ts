@@ -97,6 +97,14 @@ const routes: RouteRecordRaw[] = [
       title: '地图跳转测试',
     },
   },
+  {
+    path: '/test/qr-scanner',
+    name: 'TestQRScanner',
+    component: () => import('../pages/test/QRScannerTestPage.vue'),
+    meta: {
+      title: '扫码测试',
+    },
+  },
 ];
 
 // 创建路由实例

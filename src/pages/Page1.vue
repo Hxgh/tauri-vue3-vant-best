@@ -60,6 +60,13 @@
           is-link
           @click="goToTest('map')"
         />
+        <van-cell 
+          title="扫码测试"
+          label="二维码/条形码扫描 + 相册识别"
+          icon="scan"
+          is-link
+          @click="goToTest('qr-scanner')"
+        />
       </van-cell-group>
 
       <!-- 页面特性 -->
