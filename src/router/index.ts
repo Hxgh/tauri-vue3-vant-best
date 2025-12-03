@@ -109,6 +109,14 @@ const routes: RouteRecordRaw[] = [
       title: '扫码测试',
     },
   },
+  {
+    path: '/test/notification',
+    name: 'TestNotification',
+    component: () => import('../pages/test/NotificationTestPage.vue'),
+    meta: {
+      title: '通知测试',
+    },
+  },
 ];
 
 // 创建路由实例

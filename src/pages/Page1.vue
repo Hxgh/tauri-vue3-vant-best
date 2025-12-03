@@ -60,12 +60,19 @@
           is-link
           @click="goToTest('map')"
         />
-        <van-cell 
+        <van-cell
           title="扫码测试"
           label="二维码/条形码扫描 + 相册识别"
           icon="scan"
           is-link
           @click="goToTest('qr-scanner')"
+        />
+        <van-cell
+          title="通知测试"
+          label="系统通知权限 + 发送通知"
+          icon="bell"
+          is-link
+          @click="goToTest('notification')"
         />
       </van-cell-group>
 
