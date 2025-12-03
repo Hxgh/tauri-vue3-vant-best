@@ -1,12 +1,7 @@
 {
   "identifier": "mobile-capability",
-  "platforms": [
-    "android",
-    "iOS"
-  ],
-  "windows": [
-    "main"
-  ],
+  "platforms": ["android", "iOS"],
+  "windows": ["main"],
   "permissions": [
     "barcode-scanner:allow-scan",
     "barcode-scanner:allow-cancel",
@@ -19,9 +14,7 @@
     "fs:allow-read",
     {
       "identifier": "http:default",
-      "allow": [
-        { "url": "https://*.openfoodfacts.org/*" }
-      ]
+      "allow": [{ "url": "https://*.openfoodfacts.org/*" }]
     }
   ]
 }

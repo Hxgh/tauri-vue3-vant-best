@@ -1,9 +1,14 @@
-import { ref, onUnmounted } from 'vue';
-import { showToast, showLoadingToast, closeToast } from 'vant';
-import { Html5Qrcode, Html5QrcodeScanType } from 'html5-qrcode';
 import type { Html5QrcodeResult } from 'html5-qrcode';
-import type { ScanOptions, ScanResult, ScanError } from '@/types/scanner';
-import { normalizeFormat, getFormatInfo, inferFormatFromContent, BarcodeFormat } from '@/types/scanner';
+import { Html5Qrcode, Html5QrcodeScanType } from 'html5-qrcode';
+import { closeToast, showLoadingToast, showToast } from 'vant';
+import { onUnmounted, ref } from 'vue';
+import type { ScanError, ScanOptions, ScanResult } from '@/types/scanner';
+import {
+  BarcodeFormat,
+  getFormatInfo,
+  inferFormatFromContent,
+  normalizeFormat,
+} from '@/types/scanner';
 
 /**
  * 检测是否为 Tauri 移动端环境
@@ -24,8 +29,8 @@ function isTauriMobile(): boolean {
  */
 export function useQRScanner(options: ScanOptions = {}, elementId?: string) {
   const {
-    vibrate = true,   // 默认开启震动
-    sound = true,     // 默认开启声音
+    vibrate = true, // 默认开启震动
+    sound = true, // 默认开启声音
     onSuccess,
     onError,
   } = options;
@@ -47,7 +52,9 @@ export function useQRScanner(options: ScanOptions = {}, elementId?: string) {
 
     if (isTauriMobile()) {
       try {
-        const { vibrate: tauriVibrate } = await import('@tauri-apps/plugin-barcode-scanner');
+        const { vibrate: tauriVibrate } = await import(
+          '@tauri-apps/plugin-barcode-scanner'
+        );
         await tauriVibrate();
       } catch {
         // 降级到 navigator.vibrate
@@ -67,7 +74,9 @@ export function useQRScanner(options: ScanOptions = {}, elementId?: string) {
     if (!sound) return;
 
     try {
-      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+      const audioContext = new (
+        window.AudioContext || (window as any).webkitAudioContext
+      )();
       const oscillator = audioContext.createOscillator();
       const gainNode = audioContext.createGain();
 
@@ -156,7 +165,10 @@ export function useQRScanner(options: ScanOptions = {}, elementId?: string) {
         if (typeof scanResult.format === 'string') {
           rawFormat = scanResult.format;
         } else if (typeof scanResult.format === 'object') {
-          rawFormat = (scanResult.format as any).name || (scanResult.format as any).toString() || 'UNKNOWN';
+          rawFormat =
+            (scanResult.format as any).name ||
+            (scanResult.format as any).toString() ||
+            'UNKNOWN';
         } else {
           rawFormat = String(scanResult.format);
         }
@@ -187,7 +199,10 @@ export function useQRScanner(options: ScanOptions = {}, elementId?: string) {
       onSuccess?.(resultData);
       return resultData;
     } catch (error: any) {
-      if (error?.message?.includes('cancelled') || error?.message?.includes('canceled')) {
+      if (
+        error?.message?.includes('cancelled') ||
+        error?.message?.includes('canceled')
+      ) {
         const cancelError: ScanError = {
           name: 'ScanError',
           message: '扫描已取消',
@@ -233,8 +248,12 @@ export function useQRScanner(options: ScanOptions = {}, elementId?: string) {
       try {
         scannerInstance = new Html5Qrcode(elementId);
 
-        const qrCodeSuccessCallback = async (decodedText: string, decodedResult: Html5QrcodeResult) => {
-          const rawFormat = decodedResult.result?.format?.formatName || 'UNKNOWN';
+        const qrCodeSuccessCallback = async (
+          decodedText: string,
+          decodedResult: Html5QrcodeResult,
+        ) => {
+          const rawFormat =
+            decodedResult.result?.format?.formatName || 'UNKNOWN';
           let formatType = normalizeFormat(rawFormat);
           // 如果格式未知，尝试从内容推断
           if (formatType === BarcodeFormat.UNKNOWN) {
@@ -260,7 +279,9 @@ export function useQRScanner(options: ScanOptions = {}, elementId?: string) {
           onSuccess?.(resultData);
 
           // 自动停止并返回结果
-          stopScan().then(() => resolve(resultData)).catch(() => resolve(resultData));
+          stopScan()
+            .then(() => resolve(resultData))
+            .catch(() => resolve(resultData));
         };
 
         const config = {
@@ -277,12 +298,14 @@ export function useQRScanner(options: ScanOptions = {}, elementId?: string) {
           { facingMode: 'environment' },
           config,
           qrCodeSuccessCallback,
-          undefined
+          undefined,
         );
 
         // 获取媒体流用于手电筒控制
         try {
-          const videoElement = document.querySelector(`#${elementId} video`) as HTMLVideoElement;
+          const videoElement = document.querySelector(
+            `#${elementId} video`,
+          ) as HTMLVideoElement;
           if (videoElement?.srcObject) {
             currentStream = videoElement.srcObject as MediaStream;
             const videoTrack = currentStream.getVideoTracks()[0];
@@ -295,19 +318,23 @@ export function useQRScanner(options: ScanOptions = {}, elementId?: string) {
       } catch (error) {
         scanning.value = false;
 
-        const errorMsg = error instanceof Error ? error.message : '打开相机失败';
+        const errorMsg =
+          error instanceof Error ? error.message : '打开相机失败';
         const scanError: ScanError = {
           name: 'ScanError',
           message: errorMsg,
-          code: errorMsg.includes('Permission') || errorMsg.includes('NotAllowedError')
-            ? 'PERMISSION_DENIED'
-            : 'SCAN_ERROR',
+          code:
+            errorMsg.includes('Permission') ||
+            errorMsg.includes('NotAllowedError')
+              ? 'PERMISSION_DENIED'
+              : 'SCAN_ERROR',
         };
 
         showToast({
-          message: scanError.code === 'PERMISSION_DENIED'
-            ? '相机权限被拒绝'
-            : '打开相机失败',
+          message:
+            scanError.code === 'PERMISSION_DENIED'
+              ? '相机权限被拒绝'
+              : '打开相机失败',
           icon: 'fail',
         });
 
@@ -433,7 +460,12 @@ export function useQRScanner(options: ScanOptions = {}, elementId?: string) {
 
         const selected = await open({
           multiple: false,
-          filters: [{ name: 'Images', extensions: ['jpg', 'jpeg', 'png', 'gif', 'webp'] }],
+          filters: [
+            {
+              name: 'Images',
+              extensions: ['jpg', 'jpeg', 'png', 'gif', 'webp'],
+            },
+          ],
         });
 
         if (!selected) {
@@ -450,7 +482,12 @@ export function useQRScanner(options: ScanOptions = {}, elementId?: string) {
         const fileData = await readFile(filePath);
         const fileName = filePath.split('/').pop() || 'image.jpg';
         const ext = fileName.split('.').pop()?.toLowerCase() || 'jpg';
-        const mimeType = ext === 'png' ? 'image/png' : ext === 'gif' ? 'image/gif' : 'image/jpeg';
+        const mimeType =
+          ext === 'png'
+            ? 'image/png'
+            : ext === 'gif'
+              ? 'image/gif'
+              : 'image/jpeg';
 
         imageFile = new File([fileData], fileName, { type: mimeType });
       } catch (error: any) {

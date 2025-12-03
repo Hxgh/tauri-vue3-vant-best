@@ -83,9 +83,9 @@
 
 <script setup lang="ts">
 import { useRouter } from 'vue-router';
-import MainLayout from '@/layouts/MainLayout.vue';
 import AppTabbar from '@/components/AppTabbar.vue';
-import { HeaderMode, ContentStart, TabbarMode } from '@/types/layout';
+import MainLayout from '@/layouts/MainLayout.vue';
+import { ContentStart, HeaderMode, TabbarMode } from '@/types/layout';
 
 const router = useRouter();
 

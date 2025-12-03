@@ -66,11 +66,11 @@
 </template>
 
 <script setup lang="ts">
-import { useRouter } from 'vue-router';
 import { showToast } from 'vant';
-import MainLayout from '@/layouts/MainLayout.vue';
+import { useRouter } from 'vue-router';
 import FixedBottom from '@/components/FixedBottom.vue';
-import { HeaderMode, ContentStart, TabbarMode } from '@/types/layout';
+import MainLayout from '@/layouts/MainLayout.vue';
+import { ContentStart, HeaderMode, TabbarMode } from '@/types/layout';
 
 const router = useRouter();
 

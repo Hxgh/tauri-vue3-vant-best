@@ -100,7 +100,11 @@ export function isValidBarcode(code: string): boolean {
 /**
  * 带超时的 fetch（自动选择 Tauri HTTP 或浏览器 fetch）
  */
-async function fetchWithTimeout(url: string, options: RequestInit = {}, timeout = 30000): Promise<Response> {
+async function fetchWithTimeout(
+  url: string,
+  options: RequestInit = {},
+  timeout = 30000,
+): Promise<Response> {
   // Tauri 环境使用 Tauri HTTP 插件（绕过 CORS）
   if (isTauri()) {
     const { fetch: tauriFetch } = await import('@tauri-apps/plugin-http');
@@ -138,7 +142,9 @@ async function fetchWithTimeout(url: string, options: RequestInit = {}, timeout 
  * 从 Open Food Facts 查询商品信息
  * 优先使用中文站点获取中文信息
  */
-async function queryOpenFoodFacts(barcode: string): Promise<ProductQueryResult> {
+async function queryOpenFoodFacts(
+  barcode: string,
+): Promise<ProductQueryResult> {
   // 优先尝试中文站点
   const endpoints = [
     `https://zh.openfoodfacts.org/api/v0/product/${barcode}.json`,
@@ -149,11 +155,15 @@ async function queryOpenFoodFacts(barcode: string): Promise<ProductQueryResult> 
 
   for (const endpoint of endpoints) {
     try {
-      const response = await fetchWithTimeout(endpoint, {
-        headers: {
-          'User-Agent': 'TauriApp/1.0',
+      const response = await fetchWithTimeout(
+        endpoint,
+        {
+          headers: {
+            'User-Agent': 'TauriApp/1.0',
+          },
         },
-      }, 10000);
+        10000,
+      );
 
       if (!response.ok) {
         continue;
@@ -165,16 +175,24 @@ async function queryOpenFoodFacts(barcode: string): Promise<ProductQueryResult> 
         const p = data.product;
 
         // 优先使用中文名称
-        const name = p.product_name_zh || p.product_name || p.product_name_en || '未知商品';
+        const name =
+          p.product_name_zh ||
+          p.product_name ||
+          p.product_name_en ||
+          '未知商品';
 
         // 解析营养成分
         let nutrition: NutritionInfo | null = null;
         if (p.nutriments) {
           const n = p.nutriments;
           nutrition = {
-            energy: n['energy-kcal_100g'] ? `${n['energy-kcal_100g']} kcal` : '',
+            energy: n['energy-kcal_100g']
+              ? `${n['energy-kcal_100g']} kcal`
+              : '',
             proteins: n.proteins_100g ? `${n.proteins_100g}g` : '',
-            carbohydrates: n.carbohydrates_100g ? `${n.carbohydrates_100g}g` : '',
+            carbohydrates: n.carbohydrates_100g
+              ? `${n.carbohydrates_100g}g`
+              : '',
             fat: n.fat_100g ? `${n.fat_100g}g` : '',
             sugars: n.sugars_100g ? `${n.sugars_100g}g` : undefined,
             sodium: n.sodium_100g ? `${n.sodium_100g}mg` : undefined,
@@ -182,7 +200,12 @@ async function queryOpenFoodFacts(barcode: string): Promise<ProductQueryResult> 
           };
 
           // 如果所有值都为空，则设为 null
-          if (!nutrition.energy && !nutrition.proteins && !nutrition.carbohydrates && !nutrition.fat) {
+          if (
+            !nutrition.energy &&
+            !nutrition.proteins &&
+            !nutrition.carbohydrates &&
+            !nutrition.fat
+          ) {
             nutrition = null;
           }
         }
@@ -219,7 +242,9 @@ async function queryOpenFoodFacts(barcode: string): Promise<ProductQueryResult> 
  * @param barcode 条形码
  * @returns 商品查询结果
  */
-export async function queryProduct(barcode: string): Promise<ProductQueryResult> {
+export async function queryProduct(
+  barcode: string,
+): Promise<ProductQueryResult> {
   if (!isValidBarcode(barcode)) {
     return {
       found: false,

@@ -1,7 +1,11 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue';
 import { ActionSheet } from 'vant';
-import { getMapApps, useMapNavigation, checkMapInstalled } from '@/composables/useMapNavigation';
+import { computed, ref } from 'vue';
+import {
+  checkMapInstalled,
+  getMapApps,
+  useMapNavigation,
+} from '@/composables/useMapNavigation';
 
 interface Props {
   lat: number;
@@ -29,13 +33,13 @@ const actions = computed(() =>
     name: app.label,
     value: app.value,
     disabled: !installedMaps.value.has(app.value),
-  }))
+  })),
 );
 
 // 点击时检查已安装的地图应用
 const handleClick = async () => {
   if (isChecking.value) return;
-  
+
   isChecking.value = true;
   try {
     const installed = new Set<string>();

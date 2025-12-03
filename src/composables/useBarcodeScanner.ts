@@ -1,9 +1,9 @@
-import { ref, computed, onUnmounted } from 'vue';
-import { useQRScanner } from './useQRScanner';
-import { useProductQuery } from './useProductQuery';
-import type { ScanResult, ScanError, ScanOptions } from '@/types/scanner';
+import { computed, onUnmounted, ref } from 'vue';
+import type { ScanError, ScanOptions, ScanResult } from '@/types/scanner';
 import { isLikelyProductBarcode } from '@/types/scanner';
 import type { ProductInfo, ProductQueryResult } from './useProductQuery';
+import { useProductQuery } from './useProductQuery';
+import { useQRScanner } from './useQRScanner';
 
 /**
  * 扫描完成后的完整结果
@@ -46,7 +46,10 @@ export interface BarcodeScannerOptions extends ScanOptions {
  * @param options 扫描器配置
  * @param elementId 扫描器容器元素ID（Web端使用）
  */
-export function useBarcodeScanner(options: BarcodeScannerOptions = {}, elementId?: string) {
+export function useBarcodeScanner(
+  options: BarcodeScannerOptions = {},
+  elementId?: string,
+) {
   const {
     autoQueryProduct = true,
     onComplete,
@@ -72,7 +75,8 @@ export function useBarcodeScanner(options: BarcodeScannerOptions = {}, elementId
       ...scanOptions,
       onSuccess: async (scanResult) => {
         // 判断是否为商品条码：优先使用格式信息，备用内容判断
-        const isProductCode = scanResult.formatInfo.isProductCode ||
+        const isProductCode =
+          scanResult.formatInfo.isProductCode ||
           isLikelyProductBarcode(scanResult.content);
 
         const result: BarcodeScanResult = {
@@ -106,7 +110,7 @@ export function useBarcodeScanner(options: BarcodeScannerOptions = {}, elementId
         onError?.(error);
       },
     },
-    elementId
+    elementId,
   );
 
   // 扫描历史
@@ -206,17 +210,17 @@ export function useBarcodeScanner(options: BarcodeScannerOptions = {}, elementId
 
 // 导出类型和工具
 export type { ProductInfo, ProductQueryResult, ScanResult, ScanError };
+export type { BarcodeFormatInfo, QRContentType } from '@/types/scanner';
 export {
-  BarcodeFormat,
+  BARCODE_FORMAT_MAP,
   BarcodeCategory,
-  normalizeFormat,
+  BarcodeFormat,
+  getContentTypeLabel,
   getFormatInfo,
   inferFormatFromContent,
   isLikelyProductBarcode,
   isUrl,
   isWebUrl,
+  normalizeFormat,
   parseContentType,
-  getContentTypeLabel,
-  BARCODE_FORMAT_MAP,
 } from '@/types/scanner';
-export type { BarcodeFormatInfo, QRContentType } from '@/types/scanner';

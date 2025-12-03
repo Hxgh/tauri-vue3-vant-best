@@ -1,8 +1,8 @@
+import path from 'node:path';
 import { defineConfig } from '@rsbuild/core';
 import { pluginVue } from '@rsbuild/plugin-vue';
-import Components from 'unplugin-vue-components/rspack';
 import { VantResolver } from '@vant/auto-import-resolver';
-import path from 'node:path';
+import Components from 'unplugin-vue-components/rspack';
 
 export default defineConfig({
   plugins: [pluginVue()],

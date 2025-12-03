@@ -249,9 +249,15 @@ export function normalizeFormat(rawFormat: string): BarcodeFormat {
 /**
  * 获取条码格式信息
  */
-export function getFormatInfo(format: BarcodeFormat | string): BarcodeFormatInfo {
-  const normalizedFormat = typeof format === 'string' ? normalizeFormat(format) : format;
-  return BARCODE_FORMAT_MAP[normalizedFormat] || BARCODE_FORMAT_MAP[BarcodeFormat.UNKNOWN];
+export function getFormatInfo(
+  format: BarcodeFormat | string,
+): BarcodeFormatInfo {
+  const normalizedFormat =
+    typeof format === 'string' ? normalizeFormat(format) : format;
+  return (
+    BARCODE_FORMAT_MAP[normalizedFormat] ||
+    BARCODE_FORMAT_MAP[BarcodeFormat.UNKNOWN]
+  );
 }
 
 /**
@@ -282,8 +288,12 @@ export function inferFormatFromContent(content: string): BarcodeFormat {
   }
 
   // URL 或包含特殊字符的通常是 QR Code
-  if (content.startsWith('http://') || content.startsWith('https://') ||
-      content.includes('://') || content.includes('\n')) {
+  if (
+    content.startsWith('http://') ||
+    content.startsWith('https://') ||
+    content.includes('://') ||
+    content.includes('\n')
+  ) {
     return BarcodeFormat.QR_CODE;
   }
 
@@ -324,15 +334,15 @@ export function isWebUrl(content: string): boolean {
  * 解析二维码内容类型
  */
 export type QRContentType =
-  | 'url'           // 网页链接
-  | 'email'         // 邮箱
-  | 'phone'         // 电话
-  | 'sms'           // 短信
-  | 'wifi'          // WiFi 配置
-  | 'vcard'         // 名片
-  | 'geo'           // 地理位置
-  | 'product'       // 商品条码
-  | 'text';         // 普通文本
+  | 'url' // 网页链接
+  | 'email' // 邮箱
+  | 'phone' // 电话
+  | 'sms' // 短信
+  | 'wifi' // WiFi 配置
+  | 'vcard' // 名片
+  | 'geo' // 地理位置
+  | 'product' // 商品条码
+  | 'text'; // 普通文本
 
 /**
  * 解析二维码内容类型
@@ -346,7 +356,8 @@ export function parseContentType(content: string): QRContentType {
   if (/^https?:\/\//i.test(trimmed)) return 'url';
 
   // 邮箱
-  if (/^mailto:/i.test(trimmed) || /^[\w.-]+@[\w.-]+\.\w+$/.test(trimmed)) return 'email';
+  if (/^mailto:/i.test(trimmed) || /^[\w.-]+@[\w.-]+\.\w+$/.test(trimmed))
+    return 'email';
 
   // 电话
   if (/^tel:/i.test(trimmed) || /^\+?\d{10,13}$/.test(trimmed)) return 'phone';

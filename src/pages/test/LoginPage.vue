@@ -82,11 +82,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
 import { showToast } from 'vant';
-import MainLayout from '@/layouts/MainLayout.vue';
+import { ref } from 'vue';
 import ImmersiveNavbar from '@/components/ImmersiveNavbar.vue';
-import { HeaderMode, ContentStart, TabbarMode } from '@/types/layout';
+import MainLayout from '@/layouts/MainLayout.vue';
+import { ContentStart, HeaderMode, TabbarMode } from '@/types/layout';
 
 const username = ref('');
 const password = ref('');

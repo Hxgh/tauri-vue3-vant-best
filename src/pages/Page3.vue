@@ -139,11 +139,11 @@
 <script setup lang="ts">
 import { showToast } from 'vant';
 import { computed, ref } from 'vue';
+import AppTabbar from '@/components/AppTabbar.vue';
+import MainLayout from '@/layouts/MainLayout.vue';
+import { ContentStart, HeaderMode, TabbarMode } from '@/types/layout';
 import type { ThemeMode } from '../stores/theme';
 import { useThemeStore } from '../stores/theme';
-import MainLayout from '@/layouts/MainLayout.vue';
-import AppTabbar from '@/components/AppTabbar.vue';
-import { HeaderMode, ContentStart, TabbarMode } from '@/types/layout';
 
 const themeStore = useThemeStore();
 const showThemePicker = ref(false);
