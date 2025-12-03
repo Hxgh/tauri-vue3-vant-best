@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
+import { logger } from '@/utils/logger';
 
 /**
  * 主题类型
@@ -35,7 +36,7 @@ function getSystemTheme(): ResolvedTheme {
   try {
     // 优先使用 Android 注入的系统主题（更可靠）
     if (window.__ANDROID_SYSTEM_THEME__) {
-      console.log(
+      logger.debug(
         '[Theme] Using Android injected theme:',
         window.__ANDROID_SYSTEM_THEME__,
       );
@@ -44,13 +45,13 @@ function getSystemTheme(): ResolvedTheme {
 
     // 回退到 matchMedia 检测
     const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    console.log(
+    logger.debug(
       '[Theme] System theme detected via matchMedia:',
       isDark ? 'dark' : 'light',
     );
     return isDark ? 'dark' : 'light';
   } catch (error) {
-    console.error('[Theme] Failed to detect system theme:', error);
+    logger.error('[Theme] Failed to detect system theme:', error);
     return 'light';
   }
 }
@@ -91,11 +92,7 @@ function resolveTheme(mode: ThemeMode): ResolvedTheme {
 function applyTheme(theme: ResolvedTheme, mode: ThemeMode) {
   const root = document.documentElement;
 
-  console.log('[Theme] Applying theme:', {
-    theme,
-    mode,
-    hasClass: root.classList.contains('van-theme-dark'),
-  });
+  logger.debug('[Theme] Applying theme:', { theme, mode });
 
   // 根据解析后的主题添加或移除 Vant 深色模式类名
   // 注意：auto 模式下也需要类名，Vant 组件依赖它来显示深色样式
@@ -113,13 +110,6 @@ function applyTheme(theme: ResolvedTheme, mode: ThemeMode) {
     // 手动模式：设置 data-theme，覆盖系统主题
     root.setAttribute('data-theme', theme);
   }
-
-  console.log('[Theme] Applied theme:', {
-    theme,
-    mode,
-    hasClass: root.classList.contains('van-theme-dark'),
-    dataTheme: root.getAttribute('data-theme') || 'auto',
-  });
 
   // 同步到 Android 系统栏（如果在 Android 环境中）
   syncToAndroid(theme, mode);
@@ -147,22 +137,13 @@ declare global {
  * @param mode 用户选择的主题模式
  */
 function syncToAndroid(theme: ResolvedTheme, mode: ThemeMode) {
-  // 调用 Android JavaScript Bridge
-  console.log('[Theme] syncToAndroid called:', {
-    theme,
-    mode,
-    hasAndroidTheme: !!(typeof window !== 'undefined' && window.AndroidTheme),
-  });
-
   if (typeof window !== 'undefined' && window.AndroidTheme) {
     try {
       window.AndroidTheme.setTheme(theme, mode);
-      console.log('[Theme] AndroidTheme.setTheme() called successfully');
+      logger.debug('[Theme] Synced to Android:', { theme, mode });
     } catch (error) {
-      console.error('[Theme] Android sync failed:', error);
+      logger.error('[Theme] Android sync failed:', error);
     }
-  } else {
-    console.warn('[Theme] window.AndroidTheme is NOT available!');
   }
 
   // 保存到 localStorage（作为备份）
@@ -254,7 +235,7 @@ export const useThemeStore = defineStore('theme', () => {
    * 强制重新检查系统主题（由 Android 调用）
    */
   function forceThemeCheck() {
-    console.log('[Theme] Force theme check triggered by Android');
+    logger.debug('[Theme] Force theme check triggered by Android');
     if (mode.value === 'auto') {
       resolvedTheme.value = resolveTheme('auto');
       applyTheme(resolvedTheme.value, mode.value);
@@ -265,7 +246,7 @@ export const useThemeStore = defineStore('theme', () => {
    * 初始化主题
    */
   function initTheme() {
-    console.log('[Theme] Initializing theme system');
+    logger.debug('[Theme] Initializing theme system');
 
     // 暴露强制检查函数给 Android
     if (typeof window !== 'undefined') {

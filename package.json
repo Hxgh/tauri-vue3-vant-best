@@ -9,9 +9,11 @@
     "dev": "rsbuild dev --open",
     "format": "biome format --write",
     "lint": "biome check",
+    "type-check": "vue-tsc --noEmit",
     "preview": "rsbuild preview",
     "build:android:dev": "./scripts/build-android.sh dev",
-    "build:android:prod": "./scripts/build-android.sh release"
+    "build:android:prod": "./scripts/build-android.sh release",
+    "prepare": "husky"
   },
   "dependencies": {
     "@tauri-apps/api": "^2.9.0",
@@ -32,7 +34,15 @@
     "@rsbuild/plugin-vue": "^1.2.0",
     "@tauri-apps/cli": "^2.9.2",
     "@vant/auto-import-resolver": "^1.3.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^15.5.2",
     "typescript": "^5.9.3",
-    "unplugin-vue-components": "^30.0.0"
+    "unplugin-vue-components": "^30.0.0",
+    "vue-tsc": "^2.2.10"
+  },
+  "lint-staged": {
+    "*.{ts,tsx,vue,js,jsx}": [
+      "biome check --write"
+    ]
   }
 }

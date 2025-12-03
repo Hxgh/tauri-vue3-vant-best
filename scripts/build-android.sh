@@ -10,6 +10,15 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 ANDROID_DIR="$PROJECT_ROOT/src-tauri/gen/android"
 
+# 加载环境变量
+if [ -f "$PROJECT_ROOT/.env" ]; then
+    export $(grep -v '^#' "$PROJECT_ROOT/.env" | xargs)
+fi
+
+# 默认值
+DEV_SERVER_HOST="${DEV_SERVER_HOST:-192.168.3.81}"
+DEV_SERVER_PORT="${DEV_SERVER_PORT:-1420}"
+
 # 颜色输出
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -124,8 +133,7 @@ success "缓存已清理"
 
 if [ "$BUILD_MODE" = "dev" ]; then
     # 4a. 检查开发服务器
-    LOCAL_IP=$(ifconfig | grep "inet " | grep -v 127.0.0.1 | awk '{print $2}' | head -1)
-    DEV_URL="http://${LOCAL_IP}:1420"
+    DEV_URL="http://${DEV_SERVER_HOST}:${DEV_SERVER_PORT}"
     
     info "开发服务器: $DEV_URL"
     if ! curl -s "$DEV_URL" > /dev/null 2>&1; then
