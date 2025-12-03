@@ -6,7 +6,6 @@
 </template>
 
 <script setup lang="ts">
-import { RouterView } from 'vue-router';
 // App.vue 现在只是一个根容器
 // 所有布局逻辑由各个页面自己决定
 </script>

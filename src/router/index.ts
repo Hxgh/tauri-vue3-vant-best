@@ -128,7 +128,7 @@ const router = createRouter({
 });
 
 // 路由守卫（可选）
-router.beforeEach((to, from, next) => {
+router.beforeEach((to, _from, next) => {
   // 更新文档标题
   document.title = (to.meta.title as string) || 'Express App';
   next();

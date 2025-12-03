@@ -22,7 +22,11 @@
       "Bash(pnpm exec vue-tsc:*)",
       "Bash(pnpm exec tsc:*)",
       "Bash(npx @tauri-apps/cli android build:*)",
-      "Bash(adb shell:*)"
+      "Bash(adb shell:*)",
+      "Bash(cat:*)",
+      "Bash(npm run lint:*)",
+      "Bash(npm run check:*)",
+      "Bash(npx biome:*)"
     ],
     "deny": [],
     "ask": []

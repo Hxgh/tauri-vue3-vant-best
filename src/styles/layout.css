@@ -10,7 +10,7 @@
       to bottom,
       rgba(30, 30, 30, 0.95),
       rgba(30, 30, 30, 0.98)
-    ) !important;
+    );
   }
 }
 
@@ -20,5 +20,5 @@
     to bottom,
     rgba(30, 30, 30, 0.95),
     rgba(30, 30, 30, 0.98)
-  ) !important;
+  );
 }

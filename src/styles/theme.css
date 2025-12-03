@@ -89,8 +89,8 @@
 /* 方式2：手动切换 - 显式浅色主题（覆盖系统深色） */
 :root[data-theme="light"] {
   /* 立即应用背景色，防止白屏 */
-  background-color: #f7f8fa !important;
-  color: #323233 !important;
+  background-color: #f7f8fa;
+  color: #323233;
 
   /* 基础颜色 */
   --color-bg-primary: #ffffff;
@@ -130,8 +130,8 @@
 :root[data-theme="dark"],
 .van-theme-dark {
   /* 立即应用背景色，防止白屏 */
-  background-color: #141414 !important;
-  color: #e5e5e5 !important;
+  background-color: #141414;
+  color: #e5e5e5;
 
   /* 基础颜色 */
   --color-bg-primary: #1e1e1e;
@@ -305,5 +305,5 @@
 /* 避免过渡影响动画性能的元素 */
 .no-transition,
 .no-transition * {
-  transition: none !important;
+  transition: none;
 }

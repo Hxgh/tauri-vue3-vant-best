@@ -1,12 +1,15 @@
-import { ref } from 'vue';
 import {
+  createChannel,
+  Importance,
   isPermissionGranted,
   requestPermission,
   sendNotification,
-  createChannel,
-  Importance,
 } from '@tauri-apps/plugin-notification';
-import type { NotificationOptions, NotificationChannel } from '@/types/notification';
+import { ref } from 'vue';
+import type {
+  NotificationChannel,
+  NotificationOptions,
+} from '@/types/notification';
 
 /** 默认高优先级渠道ID */
 const DEFAULT_CHANNEL_ID = 'high_priority_channel';
@@ -71,13 +74,20 @@ export function useNotification() {
    * 创建通知渠道（Android 8.0+）
    * importance 为 high 时，通知会在前台也弹出
    */
-  async function createNotificationChannel(channel: NotificationChannel): Promise<void> {
+  async function createNotificationChannel(
+    channel: NotificationChannel,
+  ): Promise<void> {
     try {
-      const importance = channel.importance === 'high' ? Importance.High
-        : channel.importance === 'low' ? Importance.Low
-        : channel.importance === 'min' ? Importance.Min
-        : channel.importance === 'none' ? Importance.None
-        : Importance.Default;
+      const importance =
+        channel.importance === 'high'
+          ? Importance.High
+          : channel.importance === 'low'
+            ? Importance.Low
+            : channel.importance === 'min'
+              ? Importance.Min
+              : channel.importance === 'none'
+                ? Importance.None
+                : Importance.Default;
 
       await createChannel({
         id: channel.id,
@@ -108,7 +118,7 @@ export function useNotification() {
         vibration: true,
       });
       channelCreated = true;
-    } catch (error) {
+    } catch (_error) {
       // 渠道可能已存在，忽略错误
       channelCreated = true;
     }
@@ -119,7 +129,10 @@ export function useNotification() {
    * @param options 通知选项
    * @param highPriority 是否使用高优先级（前台也弹出），默认 true
    */
-  async function send(options: NotificationOptions, highPriority = true): Promise<void> {
+  async function send(
+    options: NotificationOptions,
+    highPriority = true,
+  ): Promise<void> {
     loading.value = true;
     try {
       // 确保有权限
