@@ -13,7 +13,16 @@
       "Bash(pnpm build:*)",
       "Bash(npx @tauri-apps/cli android build)",
       "Bash(adb shell am:*)",
-      "Bash(adb shell pm list packages:*)"
+      "Bash(adb shell pm list packages:*)",
+      "WebFetch(domain:tauri.app)",
+      "WebSearch",
+      "WebFetch(domain:v2.tauri.app)",
+      "WebFetch(domain:www.npmjs.com)",
+      "Bash(pnpm run type-check:*)",
+      "Bash(pnpm exec vue-tsc:*)",
+      "Bash(pnpm exec tsc:*)",
+      "Bash(npx @tauri-apps/cli android build:*)",
+      "Bash(adb shell:*)"
     ],
     "deny": [],
     "ask": []
