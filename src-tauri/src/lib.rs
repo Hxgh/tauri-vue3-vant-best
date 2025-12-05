@@ -1,3 +1,23 @@
+#[cfg(target_os = "ios")]
+use std::ffi::c_void;
+
+#[cfg(target_os = "ios")]
+use tauri::Manager;
+
+#[cfg(target_os = "ios")]
+extern "C" {
+    fn ios_configure_native_bridge(webview_ptr: *mut c_void);
+}
+
+#[cfg(target_os = "ios")]
+fn setup_ios_bridge(app: &tauri::AppHandle) {
+    if let Some(webview) = app.webviews().values().next() {
+        let _ = webview.with_webview(|platform_webview| unsafe {
+            ios_configure_native_bridge(platform_webview.inner());
+        });
+    }
+}
+
 #[derive(Debug, serde::Serialize)]
 struct MapResult {
     success: bool,
@@ -158,6 +178,9 @@ pub fn run() {
             check_map_installed
         ])
         .setup(|app| {
+            #[cfg(target_os = "ios")]
+            setup_ios_bridge(app);
+
             if cfg!(debug_assertions) {
                 app.handle().plugin(
                     tauri_plugin_log::Builder::default()
