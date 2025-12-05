@@ -52,10 +52,15 @@ themeStore.setMode('light');  // 强制浅色
 - `light/dark`：设置 `[data-theme]`，用 `!important` 覆盖
 - `.van-theme-dark`：始终根据最终主题添加/移除，Vant 组件依赖
 
-### Android 双向同步
+### 原生双向同步（Android/iOS）
 
-- **Web → Android：** `window.ThemeBridge.onThemeChanged(theme)` → 更新系统栏图标颜色
-- **Android → Web：** `onConfigurationChanged` / `onResume` → 注入 `window.__ANDROID_SYSTEM_THEME__` → 触发 `__FORCE_THEME_CHECK__`
+- **Web → 原生：**  
+  - Android: `window.AndroidTheme.setTheme(theme, mode)` → 更新系统栏图标颜色  
+  - iOS: `window.webkit.messageHandlers.iOSTheme.postMessage({ action: 'setTheme', theme, mode })`
+- **原生 → Web：**  
+  - Android: `onConfigurationChanged` / `onResume` → 注入 `window.__ANDROID_SYSTEM_THEME__`  
+  - iOS: 原生注入 `window.__IOS_SYSTEM_THEME__`  
+  - 两端都可调用 `window.__FORCE_THEME_CHECK__()` 触发 Store 重新解析
 
 ### 一致性原则
 
@@ -168,6 +173,7 @@ npm run build:android:prod   # 生产模式（打包资源）
 | `src-tauri/capabilities/default.json` | 权限配置 | - |
 | `scripts/build-android.sh` | 构建脚本 | `docs/BUILD_ANDROID.md` |
 | `scripts/templates/MainActivity/*.kt` | Android 模板 | `docs/THEME_SYSTEM.md` |
+| `src-tauri/gen/apple/Sources/app/NativeBridge.mm` | iOS 主题/安全区 Bridge | `docs/THEME_SYSTEM.md` |
 
 ---
 
@@ -184,4 +190,3 @@ npm run build:android:prod   # 生产模式（打包资源）
   --van-nav-bar-background: #1e1e1e !important;
 }
 ```
-

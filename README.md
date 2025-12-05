@@ -4,7 +4,7 @@
 
 ## 特性
 
-- 🎨 **主题系统**：浅色/深色/跟随系统，与 Android 系统栏完美同步
+- 🎨 **主题系统**：浅色/深色/跟随系统，与 Android/iOS 系统栏完美同步
 - 📱 **布局系统**：5 种布局模式，2 个工具组件
 - 🛡️ **安全区域适配**：自动处理刘海屏和 Home Indicator
 - ⚡ **开发体验**：热重载、TypeScript、Biome
@@ -84,7 +84,7 @@ themeStore.setMode('light');  // 强制浅色
 
 - **CSS 层**：`@media (prefers-color-scheme: dark)` + `data-theme` 属性
 - **JavaScript 层**：Pinia Store 管理状态
-- **Android 层**：双向同步（Web ↔ Android）
+- **原生层（Android/iOS）**：双向同步（Web ↔ Native Bridge）
 
 **详见：** [docs/THEME_SYSTEM.md](docs/THEME_SYSTEM.md)
 
@@ -143,7 +143,7 @@ express/
 ## 文档
 
 - [布局系统](docs/LAYOUT_SYSTEM.md) - 5 种布局模式详解
-- [主题系统](docs/THEME_SYSTEM.md) - 主题配置和 Android 同步
+- [主题系统](docs/THEME_SYSTEM.md) - 主题配置与原生同步
 - [Android 构建](docs/BUILD_ANDROID.md) - 构建指南
 - [功能总结](SUMMARY.md) - 完整功能总结
 

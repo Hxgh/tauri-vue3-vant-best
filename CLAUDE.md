@@ -67,7 +67,7 @@ adb install path/to/apk      # 安装 APK
 
 ### 主题系统 (三模式架构)
 
-主题管理位于 `src/stores/theme.ts`，与 Android 双向同步:
+主题管理位于 `src/stores/theme.ts`，与原生（Android/iOS）双向同步:
 
 **模式:**
 - `auto`: 跟随系统主题 (使用 `@media (prefers-color-scheme: dark)`)
@@ -77,14 +77,16 @@ adb install path/to/apk      # 安装 APK
 **架构层次:**
 1. **CSS 层:** `@media (prefers-color-scheme: dark)` + `data-theme` 属性控制自定义变量
 2. **JS 层:** Pinia store 管理状态，解析模式为实际主题
-3. **Android 层:** 通过 `window.AndroidTheme` 桥接实现双向同步
+3. **原生层:** 通过 Android/iOS Bridge 实现双向同步
    - Web → Android: `window.AndroidTheme.setTheme(theme, mode)`
-   - Android → Web: `window.__ANDROID_SYSTEM_THEME__` 注入 + `window.__FORCE_THEME_CHECK__()` 回调
+   - Web → iOS: `window.webkit.messageHandlers.iOSTheme.postMessage({ action: 'setTheme', theme, mode })`
+   - 原生 → Web: 注入 `window.__ANDROID_SYSTEM_THEME__` / `window.__IOS_SYSTEM_THEME__` + 调用 `window.__FORCE_THEME_CHECK__()`
 
 **关键函数:**
 - `applyTheme()`: 为 Vant 设置 `van-theme-dark` 类，为自定义 CSS 设置 `data-theme` 属性
-- `syncToAndroid()`: 调用 Android 桥接同步系统栏颜色
+- `syncToNative()`: 调用 Android/iOS 桥接同步系统栏颜色
 - `initTheme()`: 应用启动时调用一次，设置监听器
+- iOS Bridge: `src-tauri/gen/apple/Sources/app/NativeBridge.mm` 注册 `window.webkit.messageHandlers.iOSTheme`、同步 `__IOS_SYSTEM_THEME__` 与 Safe Area CSS 变量
 
 ### 路由和导航
 

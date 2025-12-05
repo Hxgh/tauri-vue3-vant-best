@@ -16,10 +16,16 @@ themeStore.setMode('light');  // 强制浅色
 - `light/dark`：设置 `[data-theme]`，用 `!important` 强制覆盖
 - `.van-theme-dark`：始终根据最终主题添加/移除，确保 Vant 组件正确显示
 
-### Android 双向同步
+### 原生双向同步（Android/iOS）
 
-**Web → Android：** JS Bridge 通知系统栏图标颜色变更  
-**Android → Web：** 通过 `onConfigurationChanged` 和 `onResume` 注入 `window.__ANDROID_SYSTEM_THEME__` 并触发重新计算
+**Web → 原生：**
+- Android：`window.AndroidTheme.setTheme(theme, mode)` → 更新系统栏图标/背景
+- iOS：`window.webkit.messageHandlers.iOSTheme.postMessage({ action: 'setTheme', theme, mode })`
+
+**原生 → Web：**
+- Android：`onConfigurationChanged` / `onResume` 注入 `window.__ANDROID_SYSTEM_THEME__`
+- iOS：原生注入 `window.__IOS_SYSTEM_THEME__`
+- 两端都可调用 `window.__FORCE_THEME_CHECK__?.()` 触发 Pinia Store 重新解析
 
 ## 一致性原则
 
@@ -39,3 +45,4 @@ themeStore.setMode('light');  // 强制浅色
 - `src/stores/theme.ts` - 主题状态管理
 - `src/styles/theme.css` - 主题 CSS 变量
 - `src-tauri/gen/android/.../MainActivity.kt` - Android 同步逻辑
+- `src-tauri/gen/apple/Sources/app/NativeBridge.mm` - iOS 主题/安全区 Bridge（注入 `__IOS_SYSTEM_THEME__`、`window.webkit.messageHandlers.iOSTheme`）

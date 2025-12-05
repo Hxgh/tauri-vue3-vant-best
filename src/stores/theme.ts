@@ -18,12 +18,29 @@ export type ResolvedTheme = 'light' | 'dark';
 const STORAGE_KEY = 'app-theme-mode';
 
 /**
- * 扩展 Window 接口以包含 Android 注入的主题
+ * iOS Theme Bridge 接口定义
+ */
+interface iOSThemeBridge {
+  postMessage(data: { action: string; theme: string; mode: string }): void;
+}
+
+/**
+ * 扩展 Window 接口以包含原生注入的主题
  */
 declare global {
   interface Window {
+    /** Android 注入的系统主题 */
     __ANDROID_SYSTEM_THEME__?: 'light' | 'dark';
+    /** iOS 注入的系统主题 */
+    __IOS_SYSTEM_THEME__?: 'light' | 'dark';
+    /** 强制主题检查回调（由原生调用） */
     __FORCE_THEME_CHECK__?: () => void;
+    /** iOS WebKit 桥接 */
+    webkit?: {
+      messageHandlers?: {
+        iOSTheme?: iOSThemeBridge;
+      };
+    };
   }
 }
 
@@ -34,7 +51,8 @@ function getSystemTheme(): ResolvedTheme {
   if (typeof window === 'undefined') return 'light';
 
   try {
-    // 优先使用 Android 注入的系统主题（更可靠）
+    // 优先使用原生注入的系统主题（更可靠）
+    // Android
     if (window.__ANDROID_SYSTEM_THEME__) {
       logger.debug(
         '[Theme] Using Android injected theme:',
@@ -43,17 +61,32 @@ function getSystemTheme(): ResolvedTheme {
       return window.__ANDROID_SYSTEM_THEME__;
     }
 
+    // iOS
+    if (window.__IOS_SYSTEM_THEME__) {
+      logger.debug(
+        '[Theme] Using iOS injected theme:',
+        window.__IOS_SYSTEM_THEME__,
+      );
+      return window.__IOS_SYSTEM_THEME__;
+    }
+
     // 回退到 matchMedia 检测
-    const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    logger.debug(
-      '[Theme] System theme detected via matchMedia:',
-      isDark ? 'dark' : 'light',
-    );
-    return isDark ? 'dark' : 'light';
+    const detected = detectMediaTheme();
+    logger.debug('[Theme] System theme detected via matchMedia:', detected);
+    return detected;
   } catch (error) {
     logger.error('[Theme] Failed to detect system theme:', error);
     return 'light';
   }
+}
+
+/**
+ * 使用 matchMedia 检测系统主题
+ */
+function detectMediaTheme(): ResolvedTheme {
+  if (typeof window === 'undefined') return 'light';
+  const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  return isDark ? 'dark' : 'light';
 }
 
 /**
@@ -111,8 +144,8 @@ function applyTheme(theme: ResolvedTheme, mode: ThemeMode) {
     root.setAttribute('data-theme', theme);
   }
 
-  // 同步到 Android 系统栏（如果在 Android 环境中）
-  syncToAndroid(theme, mode);
+  // 同步到原生系统栏（Android/iOS）
+  syncToNative(theme, mode);
 }
 
 /**
@@ -132,17 +165,34 @@ declare global {
 }
 
 /**
- * 同步主题到 Android 系统栏
+ * 同步主题到原生系统栏（Android/iOS）
  * @param theme 解析后的主题
  * @param mode 用户选择的主题模式
  */
-function syncToAndroid(theme: ResolvedTheme, mode: ThemeMode) {
-  if (typeof window !== 'undefined' && window.AndroidTheme) {
+function syncToNative(theme: ResolvedTheme, mode: ThemeMode) {
+  if (typeof window === 'undefined') return;
+
+  // Android 桥接
+  if (window.AndroidTheme) {
     try {
       window.AndroidTheme.setTheme(theme, mode);
       logger.debug('[Theme] Synced to Android:', { theme, mode });
     } catch (error) {
       logger.error('[Theme] Android sync failed:', error);
+    }
+  }
+
+  // iOS 桥接
+  if (window.webkit?.messageHandlers?.iOSTheme) {
+    try {
+      window.webkit.messageHandlers.iOSTheme.postMessage({
+        action: 'setTheme',
+        theme,
+        mode,
+      });
+      logger.debug('[Theme] Synced to iOS:', { theme, mode });
+    } catch (error) {
+      logger.error('[Theme] iOS sync failed:', error);
     }
   }
 
@@ -199,13 +249,16 @@ export const useThemeStore = defineStore('theme', () => {
     const handleChange = (e: MediaQueryListEvent) => {
       if (mode.value === 'auto') {
         resolvedTheme.value = e.matches ? 'dark' : 'light';
+        if (typeof window !== 'undefined') {
+          window.__IOS_SYSTEM_THEME__ = resolvedTheme.value;
+        }
         // auto 模式下，只更新 resolvedTheme 和 data-theme 属性
         // CSS 媒体查询会自动应用样式
         document.documentElement.setAttribute(
           'data-theme',
           resolvedTheme.value,
         );
-        syncToAndroid(resolvedTheme.value, mode.value);
+        syncToNative(resolvedTheme.value, mode.value);
       }
     };
 
@@ -232,11 +285,14 @@ export const useThemeStore = defineStore('theme', () => {
   }
 
   /**
-   * 强制重新检查系统主题（由 Android 调用）
+   * 强制重新检查系统主题（由原生层调用）
    */
   function forceThemeCheck() {
-    logger.debug('[Theme] Force theme check triggered by Android');
+    logger.debug('[Theme] Force theme check triggered by native');
     if (mode.value === 'auto') {
+      if (typeof window !== 'undefined') {
+        window.__IOS_SYSTEM_THEME__ = detectMediaTheme();
+      }
       resolvedTheme.value = resolveTheme('auto');
       applyTheme(resolvedTheme.value, mode.value);
     }
