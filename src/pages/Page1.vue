@@ -54,6 +54,13 @@
       <!-- 功能测试入口 -->
       <van-cell-group inset title="🚀 功能测试" style="margin-top: 16px;">
         <van-cell 
+          title="键盘抬起测试"
+          label="验证 --skb 注入与底部自适应"
+          icon="comment-o"
+          is-link
+          @click="goToTest('keyboard')"
+        />
+        <van-cell 
           title="地图跳转测试"
           label="原生唤起地图 + 自动 Fallback"
           icon="location-o"
@@ -143,5 +150,4 @@ function goToTest(page: string) {
   padding-bottom: 24px;
 }
 </style>
-
 

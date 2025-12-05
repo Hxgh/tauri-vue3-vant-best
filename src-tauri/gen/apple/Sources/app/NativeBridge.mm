@@ -71,11 +71,14 @@ static void EvaluateJavaScript(WKWebView *webView, NSString *script) {
 @property(nonatomic, weak) WKWebView *webView;
 @property(nonatomic, strong) IOSThemeMessageHandler *themeHandler;
 @property(nonatomic, copy) NSString *cachedSystemTheme;
+@property(nonatomic, assign) CGFloat cachedKeyboardHeight;
 @end
 
 @implementation IOSNativeBridge {
   id _appDidBecomeActiveObserver;
   id _orientationObserver;
+  id _keyboardWillShowObserver;
+  id _keyboardWillHideObserver;
 }
 
 + (instancetype)shared {
@@ -131,6 +134,25 @@ static void EvaluateJavaScript(WKWebView *webView, NSString *script) {
               usingBlock:^(NSNotification *_Nonnull note) {
                 [weakSelf syncSafeAreaInsets];
               }];
+
+  // 键盘显示监听
+  _keyboardWillShowObserver = [center
+      addObserverForName:UIKeyboardWillShowNotification
+                  object:nil
+                   queue:[NSOperationQueue mainQueue]
+              usingBlock:^(NSNotification *_Nonnull note) {
+                CGRect frame = [note.userInfo[UIKeyboardFrameEndUserInfoKey] CGRectValue];
+                [weakSelf notifyKeyboardHeight:frame.size.height];
+              }];
+
+  // 键盘隐藏监听
+  _keyboardWillHideObserver = [center
+      addObserverForName:UIKeyboardWillHideNotification
+                  object:nil
+                   queue:[NSOperationQueue mainQueue]
+              usingBlock:^(NSNotification *_Nonnull note) {
+                [weakSelf notifyKeyboardHeight:0];
+              }];
 }
 
 - (void)stopObservers {
@@ -144,6 +166,16 @@ static void EvaluateJavaScript(WKWebView *webView, NSString *script) {
     [center removeObserver:_orientationObserver];
     _orientationObserver = nil;
     [[UIDevice currentDevice] endGeneratingDeviceOrientationNotifications];
+  }
+
+  if (_keyboardWillShowObserver) {
+    [center removeObserver:_keyboardWillShowObserver];
+    _keyboardWillShowObserver = nil;
+  }
+
+  if (_keyboardWillHideObserver) {
+    [center removeObserver:_keyboardWillHideObserver];
+    _keyboardWillHideObserver = nil;
   }
 }
 
@@ -193,6 +225,25 @@ static void EvaluateJavaScript(WKWebView *webView, NSString *script) {
                                      "doc.style.setProperty('--sal','%.2fpx');"
                                      "doc.style.setProperty('--sar','%.2fpx');})();",
                                      top, bottom, left, right];
+  EvaluateJavaScript(self.webView, script);
+}
+
+- (void)notifyKeyboardHeight:(CGFloat)height {
+  if (!self.webView) {
+    return;
+  }
+  if (height == self.cachedKeyboardHeight) {
+    return;
+  }
+  self.cachedKeyboardHeight = height;
+
+  NSString *script = [NSString stringWithFormat:
+                                     @"(function(){"
+                                     "document.documentElement.style.setProperty('--skb','%.0fpx');"
+                                     "window.__KEYBOARD_HEIGHT__=%.0f;"
+                                     "if(window.__ON_KEYBOARD_CHANGE__){window.__ON_KEYBOARD_CHANGE__(%.0f);}"
+                                     "})();",
+                                     height, height, height];
   EvaluateJavaScript(self.webView, script);
 }
 @end

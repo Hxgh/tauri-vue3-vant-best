@@ -24,6 +24,14 @@
 
 ## 功能测试
 
+### KeyboardTestPage - 键盘抬起测试
+- **路径：** `/test/keyboard`
+- **配置：** `Standard` Header + `BelowHeader` + `None` Tabbar
+- **特点：**
+  - 实时读取原生注入的 `--skb` 键盘高度
+  - 粘性底部输入区域自动使用 `max(--skb, safe-area)`
+  - 便于验证键盘抬起时内容与底部安全区域的联动
+
 ### MapTestPage - 地图跳转测试
 - **路径：** `/test/map`
 - **配置：** `Standard` Header + `BelowHeader` + `None` Tabbar

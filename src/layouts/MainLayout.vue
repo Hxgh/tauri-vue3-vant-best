@@ -146,16 +146,16 @@ const contentStyle = computed<{ paddingTop: string; paddingBottom: string }>(
     }
 
     // ==================== 底部 Padding ====================
+    // 注：--skb 是键盘高度（由原生层注入），键盘弹出时自动增加底部 padding
     if (props.tabbarMode === TabbarMode.Standard) {
-      // 有 Tabbar：Tabbar 高度 + 底部安全区域（最小 20px）
-      paddingBottom = 'calc(50px + max(var(--sab), 20px))';
+      // 有 Tabbar：Tabbar 高度 + max(键盘高度, 底部安全区域)
+      paddingBottom = 'calc(50px + max(var(--skb), max(var(--sab), 20px)))';
     } else if (props.tabbarMode === TabbarMode.None) {
-      // 无 Tabbar：只添加底部安全区域（不含 Tabbar 高度）
-      // 让内容在安全区域内，但没有 Tabbar 占位
-      paddingBottom = 'max(var(--sab), 20px)';
+      // 无 Tabbar：max(键盘高度, 底部安全区域)
+      paddingBottom = 'max(var(--skb), max(var(--sab), 20px))';
     } else if (props.tabbarMode === TabbarMode.Immersive) {
-      // 完全沉浸式：内容延伸到底部，不添加任何 padding
-      paddingBottom = '0';
+      // 完全沉浸式：仅在键盘弹出时添加 padding
+      paddingBottom = 'var(--skb)';
     }
 
     return {

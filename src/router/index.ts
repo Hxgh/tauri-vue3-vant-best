@@ -94,6 +94,14 @@ const routes: RouteRecordRaw[] = [
     },
   },
   {
+    path: '/test/keyboard',
+    name: 'TestKeyboard',
+    component: () => import('../pages/test/KeyboardTestPage.vue'),
+    meta: {
+      title: '键盘抬起测试',
+    },
+  },
+  {
     path: '/test/map',
     name: 'TestMap',
     component: () => import('../pages/test/MapTestPage.vue'),

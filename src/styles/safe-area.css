@@ -22,6 +22,12 @@
   /* 兜底值：某些 Android 设备 env() 返回 0，需要最小安全距离 */
   --sab-fallback: max(var(--sab), 20px);
 
+  /* 键盘高度（由原生层注入，默认 0） */
+  --skb: 0px;
+
+  /* 有效底部间距 = 键盘高度或安全区域（取较大值） */
+  --effective-bottom: max(var(--skb), var(--sab));
+
   /* Vant 组件高度常量 */
   --navbar-height: 46px;
   --tabbar-height: 50px;

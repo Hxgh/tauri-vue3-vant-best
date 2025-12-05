@@ -9,9 +9,16 @@ import android.webkit.JavascriptInterface
 import android.webkit.WebSettings
 import android.webkit.WebView
 import androidx.activity.enableEdgeToEdge
+import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
 
 class MainActivity : TauriActivity() {
+  // 当前键盘高度（像素）
+  private var currentKeyboardHeight = 0
+
+  private var isFirstResume = true
+
   override fun onCreate(savedInstanceState: Bundle?) {
     enableEdgeToEdge()
     super.onCreate(savedInstanceState)
@@ -30,6 +37,9 @@ class MainActivity : TauriActivity() {
     // 不能延迟，否则 JavaScript 会检测到 window.AndroidTheme 不存在并缓存该结果
     setupThemeBridgeWithRetry(maxAttempts = 30, delayMs = 50)
 
+    // 设置键盘高度监听
+    setupKeyboardListener()
+
     // 开发模式：异步加载开发服务器
     Thread {
       Thread.sleep(300)
@@ -37,14 +47,12 @@ class MainActivity : TauriActivity() {
     }.start()
   }
 
-  private var isFirstResume = true
-
   /**
    * 应用恢复到前台时，重新检查主题
    */
   override fun onResume() {
     super.onResume()
-    
+
     // 只在从后台返回时通知（跳过首次启动）
     if (!isFirstResume) {
       notifyWebViewRefreshTheme()
@@ -80,17 +88,17 @@ class MainActivity : TauriActivity() {
    */
   override fun onConfigurationChanged(newConfig: Configuration) {
     super.onConfigurationChanged(newConfig)
-    
+
     // 检测系统主题是否变化
-    val isNightMode = (newConfig.uiMode and Configuration.UI_MODE_NIGHT_MASK) == 
+    val isNightMode = (newConfig.uiMode and Configuration.UI_MODE_NIGHT_MASK) ==
                       Configuration.UI_MODE_NIGHT_YES
-    
+
     val themeInfo = if (isNightMode) "dark" else "light"
     android.util.Log.d("MainActivity", "Configuration changed, new theme: $themeInfo")
-    
+
     // 更新系统栏颜色
     updateSystemBarsForTheme(isNightMode)
-    
+
     // 通知 WebView 系统主题已变化
     val webView = findWebView()
     webView?.evaluateJavascript(
@@ -98,7 +106,7 @@ class MainActivity : TauriActivity() {
       (function() {
         window.__ANDROID_SYSTEM_THEME__ = '$themeInfo';
         console.log('[Android] System theme changed:', '$themeInfo');
-        
+
         // 触发强制检查
         if (window.__FORCE_THEME_CHECK__) {
           window.__FORCE_THEME_CHECK__();
@@ -117,23 +125,23 @@ class MainActivity : TauriActivity() {
         // 启用 JavaScript（确保 Bridge 可用）
         javaScriptEnabled = true
       }
-      
+
       // 设置 WebViewClient 以在页面加载完成后注入主题
       webView?.webViewClient = object : android.webkit.WebViewClient() {
         override fun onPageFinished(view: android.webkit.WebView?, url: String?) {
           super.onPageFinished(view, url)
-          
+
           // 页面加载完成后，立即注入系统主题
           val isDark = isSystemDarkMode()
           val themeInfo = if (isDark) "dark" else "light"
           android.util.Log.d("MainActivity", "Page loaded, injecting system theme: $themeInfo")
-          
+
           view?.evaluateJavascript(
             """
             (function() {
               window.__ANDROID_SYSTEM_THEME__ = '$themeInfo';
               console.log('[Android] System theme injected on page load:', '$themeInfo');
-              
+
               // 如果 theme store 已经初始化，强制重新检查
               setTimeout(function() {
                 if (window.__FORCE_THEME_CHECK__) {
@@ -146,7 +154,7 @@ class MainActivity : TauriActivity() {
           )
         }
       }
-      
+
       webView?.loadUrl("http://192.168.3.81:1420")
     }
   }
@@ -271,7 +279,7 @@ class MainActivity : TauriActivity() {
    * 检测系统是否处于深色模式
    */
   private fun isSystemDarkMode(): Boolean {
-    val nightMode = resources.configuration.uiMode and 
+    val nightMode = resources.configuration.uiMode and
                    android.content.res.Configuration.UI_MODE_NIGHT_MASK
     return nightMode == android.content.res.Configuration.UI_MODE_NIGHT_YES
   }
@@ -291,5 +299,54 @@ class MainActivity : TauriActivity() {
       }
     }
     return null
+  }
+
+  /**
+   * 设置键盘高度监听
+   * 使用 WindowInsets API 监听 IME（输入法）的显示/隐藏
+   */
+  private fun setupKeyboardListener() {
+    ViewCompat.setOnApplyWindowInsetsListener(window.decorView) { view, insets ->
+      val imeInsets = insets.getInsets(WindowInsetsCompat.Type.ime())
+      val navBarInsets = insets.getInsets(WindowInsetsCompat.Type.navigationBars())
+
+      // 键盘高度 = IME 底部 inset - 导航栏高度
+      // 因为 IME insets 包含了导航栏的高度
+      val keyboardHeight = if (imeInsets.bottom > navBarInsets.bottom) {
+        imeInsets.bottom - navBarInsets.bottom
+      } else {
+        0
+      }
+
+      if (keyboardHeight != currentKeyboardHeight) {
+        currentKeyboardHeight = keyboardHeight
+        notifyKeyboardChange(keyboardHeight)
+      }
+
+      ViewCompat.onApplyWindowInsets(view, insets)
+    }
+  }
+
+  /**
+   * 通知 WebView 键盘高度变化
+   * @param heightPx 键盘高度（像素）
+   */
+  private fun notifyKeyboardChange(heightPx: Int) {
+    val webView = findWebView() ?: return
+    val density = resources.displayMetrics.density
+    val heightDp = (heightPx / density).toInt()
+
+    webView.evaluateJavascript(
+      """
+      (function() {
+        document.documentElement.style.setProperty('--skb', '${heightDp}px');
+        window.__KEYBOARD_HEIGHT__ = $heightDp;
+        if (window.__ON_KEYBOARD_CHANGE__) {
+          window.__ON_KEYBOARD_CHANGE__($heightDp);
+        }
+      })();
+      """.trimIndent(),
+      null
+    )
   }
 }

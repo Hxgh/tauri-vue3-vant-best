@@ -8,9 +8,14 @@ import android.view.WindowInsetsController
 import android.webkit.JavascriptInterface
 import android.webkit.WebView
 import androidx.activity.enableEdgeToEdge
+import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
 
 class MainActivity : TauriActivity() {
+  // 当前键盘高度（像素）
+  private var currentKeyboardHeight = 0
+
   override fun onCreate(savedInstanceState: Bundle?) {
     enableEdgeToEdge()
     super.onCreate(savedInstanceState)
@@ -31,6 +36,9 @@ class MainActivity : TauriActivity() {
     // ⚠️ 关键修复：必须在 WebView 加载 JavaScript 之前设置 Bridge
     // 不能延迟，否则 JavaScript 会检测到 window.AndroidTheme 不存在并缓存该结果
     setupThemeBridgeWithRetry(maxAttempts = 30, delayMs = 50)
+
+    // 设置键盘高度监听
+    setupKeyboardListener()
   }
 
   /**
@@ -57,7 +65,7 @@ class MainActivity : TauriActivity() {
    */
   override fun onResume() {
     super.onResume()
-    
+
     // 只在从后台返回时通知（跳过首次启动）
     if (!isFirstResume) {
       notifyWebViewRefreshTheme()
@@ -219,7 +227,7 @@ class MainActivity : TauriActivity() {
    * 检测系统是否处于深色模式
    */
   private fun isSystemDarkMode(): Boolean {
-    val nightMode = resources.configuration.uiMode and 
+    val nightMode = resources.configuration.uiMode and
                    android.content.res.Configuration.UI_MODE_NIGHT_MASK
     return nightMode == android.content.res.Configuration.UI_MODE_NIGHT_YES
   }
@@ -239,5 +247,54 @@ class MainActivity : TauriActivity() {
       }
     }
     return null
+  }
+
+  /**
+   * 设置键盘高度监听
+   * 使用 WindowInsets API 监听 IME（输入法）的显示/隐藏
+   */
+  private fun setupKeyboardListener() {
+    ViewCompat.setOnApplyWindowInsetsListener(window.decorView) { view, insets ->
+      val imeInsets = insets.getInsets(WindowInsetsCompat.Type.ime())
+      val navBarInsets = insets.getInsets(WindowInsetsCompat.Type.navigationBars())
+
+      // 键盘高度 = IME 底部 inset - 导航栏高度
+      // 因为 IME insets 包含了导航栏的高度
+      val keyboardHeight = if (imeInsets.bottom > navBarInsets.bottom) {
+        imeInsets.bottom - navBarInsets.bottom
+      } else {
+        0
+      }
+
+      if (keyboardHeight != currentKeyboardHeight) {
+        currentKeyboardHeight = keyboardHeight
+        notifyKeyboardChange(keyboardHeight)
+      }
+
+      ViewCompat.onApplyWindowInsets(view, insets)
+    }
+  }
+
+  /**
+   * 通知 WebView 键盘高度变化
+   * @param heightPx 键盘高度（像素）
+   */
+  private fun notifyKeyboardChange(heightPx: Int) {
+    val webView = findWebView() ?: return
+    val density = resources.displayMetrics.density
+    val heightDp = (heightPx / density).toInt()
+
+    webView.evaluateJavascript(
+      """
+      (function() {
+        document.documentElement.style.setProperty('--skb', '${heightDp}px');
+        window.__KEYBOARD_HEIGHT__ = $heightDp;
+        if (window.__ON_KEYBOARD_CHANGE__) {
+          window.__ON_KEYBOARD_CHANGE__($heightDp);
+        }
+      })();
+      """.trimIndent(),
+      null
+    )
   }
 }
