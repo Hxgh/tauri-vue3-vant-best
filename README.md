@@ -1,109 +1,73 @@
-# tvvb App
+# Tauri Vue3 Vant 移动端模板
 
-基于 Tauri 2 + Vue 3 + Vant 4 的跨平台移动应用。
+基于 Tauri 2 + Vue 3 + Vant 4 的跨平台移动应用模板。
 
-## 特性
+## 核心能力
 
-- 🎨 **主题系统**：浅色/深色/跟随系统，与 Android/iOS 系统栏完美同步
-- 📱 **布局系统**：4 种布局模式，3 个工具组件
-- 🛡️ **安全区域适配**：自动处理刘海屏和 Home Indicator
-- 📷 **扫码功能**：支持 QR/条形码，商品信息查询
-- 🗺️ **地图导航**：支持高德/百度/腾讯地图
-- 🔔 **系统通知**：跨平台通知支持
+| 模块 | 说明 |
+|------|------|
+| `src/core/platform` | 平台检测、原生桥接、日志 |
+| `src/core/theme` | 主题系统（深浅色/跟随系统） |
+| `src/core/layout` | 布局系统（4种模式） |
+| `src/core/scanner` | 扫码功能 |
+| `src/core/map` | 地图导航 |
+| `src/core/notification` | 系统通知 |
+| `src/components/` | 工具组件 |
+| `src-tauri/` | Android/iOS 原生能力 |
+| `scripts/` | 构建脚本 |
 
-## 快速开始
+## 使用模板
 
 ```bash
-# 安装依赖
-pnpm install
+# 1. 克隆
+git clone https://github.com/xxx/tauri-vue3-vant-best.git my-app
+cd my-app && rm -rf .git && git init
 
-# 启动 Web 开发服务器
-pnpm dev
+# 2. 删除示例页面
+rm -rf src/pages/test src/pages/Page*.vue
 
-# 构建生产版本
-pnpm build
+# 3. 修改配置
+#    - package.json: name
+#    - src-tauri/tauri.conf.json: productName, identifier
+#    - .env: DEV_SERVER_HOST
 
-# Android 开发模式（需先启动 dev server）
-pnpm build:android:dev
-
-# Android 生产模式
-pnpm build:android:prod
+# 4. 创建业务页面，修改路由
+pnpm install && pnpm dev
 ```
 
-## 项目结构
+## 页面示例
 
-```
-src/
-├── core/                 # 核心模块
-│   ├── platform/         # 平台检测、日志、桥接
-│   ├── theme/            # 主题系统
-│   ├── layout/           # 布局系统
-│   ├── scanner/          # 扫码功能
-│   ├── map/              # 地图导航
-│   └── notification/     # 系统通知
-├── components/           # 公共组件
-├── pages/                # 页面
-├── router/               # 路由
-└── types/                # 类型定义
+```vue
+<template>
+  <MainLayout
+    :header-mode="HeaderMode.Standard"
+    :content-start="ContentStart.BelowHeader"
+    :tabbar-mode="TabbarMode.None"
+    header-title="订单详情"
+  >
+    <!-- 业务内容 -->
+  </MainLayout>
+</template>
 
-src-tauri/                # Tauri 后端
-scripts/                  # 构建脚本
-docs/                     # 详细文档
-```
-
-## 核心模块使用
-
-```typescript
-// 平台工具
-import { logger, isTauriEnv, callBridge } from '@/core/platform';
-
-// 主题系统
-import { useThemeStore } from '@/core/theme';
-const themeStore = useThemeStore();
-themeStore.setMode('dark'); // 'light' | 'dark' | 'auto'
-
-// 布局系统
+<script setup lang="ts">
 import { MainLayout, HeaderMode, ContentStart, TabbarMode } from '@/core/layout';
-
-// 扫码功能
-import { useBarcodeScanner } from '@/core/scanner';
-const { startScan, lastResult } = useBarcodeScanner();
-
-// 地图导航
-import { openMapNavigation } from '@/core/map';
-await openMapNavigation(30.66, 104.06, '目的地', 'amap');
-
-// 系统通知
-import { useNotification } from '@/core/notification';
-const { send } = useNotification();
-await send({ title: '标题', body: '内容' });
+</script>
 ```
 
-## 布局模式
+## 命令
 
-| 模式 | 配置 | 适用场景 |
-|------|------|----------|
-| 标准页面 | `Standard` + `BelowHeader` + `Standard` | 列表页 |
-| 无 Header | `None` + `SafeArea` + `Standard` | 首页 |
-| 详情页 | `Standard` + `BelowHeader` + `None` | 详情 + 固定按钮 |
-| 沉浸式 | `None` + `ScreenTop` + `Immersive` | 登录/视频 |
-
-详见 [docs/LAYOUT_SYSTEM.md](docs/LAYOUT_SYSTEM.md)
-
-## 技术栈
-
-- **前端**：Vue 3 + TypeScript + Vant 4
-- **构建**：Rsbuild (Rspack)
-- **状态管理**：Pinia
-- **移动端**：Tauri 2
-- **代码规范**：Biome
+```bash
+pnpm dev                 # 开发
+pnpm build               # 构建
+pnpm build:android:dev   # Android 开发（需先启动 dev）
+pnpm build:android:prod  # Android 生产
+```
 
 ## 文档
 
 - [布局系统](docs/LAYOUT_SYSTEM.md)
 - [主题系统](docs/THEME_SYSTEM.md)
 - [Android 构建](docs/BUILD_ANDROID.md)
-- [地图组件](docs/MAP_COMPONENT_USAGE.md)
 
 ## License
 
