@@ -1,4 +1,4 @@
-# Express App
+# tvvb App
 
 基于 Tauri + Vue 3 + Vant 的跨平台移动应用。
 
@@ -117,7 +117,7 @@ npm run build:android:prod  # 生产模式（硬打包）
 ## 项目结构
 
 ```
-express/
+tvvb/
 ├── src/
 │   ├── components/          # 公共组件
 │   │   ├── FixedBottom.vue

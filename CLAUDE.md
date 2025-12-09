@@ -17,7 +17,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ```bash
 # Web 开发
-npm run dev          # 启动开发服务器 (端口 1420)
+npm run dev          # 启动开发服务器 (端口 1234)
 npm run build        # 构建生产版本
 npm run preview      # 预览生产构建
 
@@ -150,7 +150,7 @@ Vant 组件通过 `unplugin-vue-components` 和 `VantResolver` 自动导入（�
 **环境变量配置** (复制 `.env.example` 为 `.env`):
 ```bash
 DEV_SERVER_HOST=192.168.3.81  # 开发服务器 IP
-DEV_SERVER_PORT=1420          # 开发服务器端口
+DEV_SERVER_PORT=1234          # 开发服务器端口
 ```
 
 ## 常见模式

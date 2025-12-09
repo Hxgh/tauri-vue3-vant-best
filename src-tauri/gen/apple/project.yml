@@ -1,6 +1,6 @@
 name: app
 options:
-  bundleIdPrefix: com.express.app
+  bundleIdPrefix: com.tvvb.app
   deploymentTarget:
     iOS: 14.0
 fileGroups: [../../src]
@@ -10,8 +10,8 @@ configs:
 settingGroups:
   app:
     base:
-      PRODUCT_NAME: express
-      PRODUCT_BUNDLE_IDENTIFIER: com.express.app
+      PRODUCT_NAME: tvvb
+      PRODUCT_BUNDLE_IDENTIFIER: com.tvvb.app
 targetTemplates:
   app:
     type: application

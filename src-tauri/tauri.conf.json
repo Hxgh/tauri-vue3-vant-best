@@ -1,18 +1,18 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
-  "productName": "express",
+  "productName": "tvvb",
   "version": "0.1.0",
-  "identifier": "com.express.app",
+  "identifier": "com.tvvb.app",
   "build": {
     "frontendDist": "../dist",
-    "devUrl": "http://192.168.3.81:1420",
+    "devUrl": "http://localhost:1234",
     "beforeDevCommand": "",
     "beforeBuildCommand": "pnpm build"
   },
   "app": {
     "windows": [
       {
-        "title": "Express App",
+        "title": "tvvb App",
         "width": 800,
         "height": 600,
         "resizable": true,

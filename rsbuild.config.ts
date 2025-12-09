@@ -7,7 +7,7 @@ import Components from 'unplugin-vue-components/rspack';
 export default defineConfig({
   plugins: [pluginVue()],
   server: {
-    port: 1420,
+    port: 1234,
     open: false,
   },
   source: {

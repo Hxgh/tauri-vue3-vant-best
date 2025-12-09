@@ -37,7 +37,7 @@ async fn open_map_navigation(
         use tauri_plugin_opener::OpenerExt;
 
         let scheme_url = match app_type.as_str() {
-            "amap" => format!("androidamap://navi?sourceApplication=express&lat={}&lon={}&dev=0&style=2", lat, lng),
+            "amap" => format!("androidamap://navi?sourceApplication=tvvb&lat={}&lon={}&dev=0&style=2", lat, lng),
             "baidu" => format!("baidumap://map/direction?destination=latlng:{},{}|name:{}&coord_type=bd09ll&mode=driving", lat, lng, name),
             "tencent" => format!("qqmap://map/routeplan?type=drive&to={}&tocoord={},{}", name, lat, lng),
             _ => return Err("不支持的地图类型".to_string()),
@@ -74,7 +74,7 @@ async fn open_map_navigation(
         use tauri_plugin_opener::OpenerExt;
 
         let scheme_url = match app_type.as_str() {
-            "amap" => format!("iosamap://navi?sourceApplication=express&lat={}&lon={}&dev=0&style=2", lat, lng),
+            "amap" => format!("iosamap://navi?sourceApplication=tvvb&lat={}&lon={}&dev=0&style=2", lat, lng),
             "baidu" => format!("baidumap://map/direction?destination=latlng:{},{}|name:{}&coord_type=bd09ll&mode=driving", lat, lng, name),
             "tencent" => format!("qqmap://map/routeplan?type=drive&to={}&tocoord={},{}", name, lat, lng),
             _ => return Err("不支持的地图类型".to_string()),
@@ -166,8 +166,12 @@ fn check_map_installed(_app_type: String) -> Result<CheckMapResult, String> {
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    tauri::Builder::default()
-        .plugin(tauri_plugin_barcode_scanner::init())
+    let builder = tauri::Builder::default();
+
+    #[cfg(any(target_os = "android", target_os = "ios"))]
+    let builder = builder.plugin(tauri_plugin_barcode_scanner::init());
+
+    builder
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())

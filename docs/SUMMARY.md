@@ -1,4 +1,4 @@
-# Express App - 功能总结
+# tvvb App - 功能总结
 
 ## 核心原则
 
@@ -117,7 +117,7 @@ npm run build:android:prod
 
 ## 总结
 
-Express App 提供了：
+tvvb App 提供了：
 
 - **5 种布局模式**，覆盖所有场景
 - **3 个工具组件**，简化开发

@@ -17,7 +17,7 @@ fi
 
 # 默认值
 DEV_SERVER_HOST="${DEV_SERVER_HOST:-192.168.3.81}"
-DEV_SERVER_PORT="${DEV_SERVER_PORT:-1420}"
+DEV_SERVER_PORT="${DEV_SERVER_PORT:-1234}"
 
 # 颜色输出
 RED='\033[0;31m'
@@ -74,7 +74,7 @@ DEVICE=$(adb devices | grep "device$" | awk '{print $1}' | head -1)
 success "设备: $DEVICE"
 
 # 2. 切换 MainActivity 模板
-MAIN_ACTIVITY="$ANDROID_DIR/app/src/main/java/com/express/app/MainActivity.kt"
+MAIN_ACTIVITY="$ANDROID_DIR/app/src/main/java/com/tvvb/app/MainActivity.kt"
 MAIN_ACTIVITY_TEMPLATE="$SCRIPT_DIR/templates/MainActivity/$BUILD_MODE.kt"
 MAIN_ACTIVITY_BACKUP="$MAIN_ACTIVITY.bak"
 
@@ -197,7 +197,7 @@ if [ "$BUILD_MODE" = "dev" ]; then
     
     # 5a. 卸载旧版本
     info "卸载旧版本..."
-    adb uninstall com.express.app 2>/dev/null || true
+    adb uninstall com.tvvb.app 2>/dev/null || true
     
     # 6a. 安装到设备
     info "安装到设备..."
@@ -206,7 +206,7 @@ if [ "$BUILD_MODE" = "dev" ]; then
     
     # 7a. 启动应用
     info "启动应用..."
-    adb shell am start -n com.express.app/.MainActivity
+    adb shell am start -n com.tvvb.app/.MainActivity
     success "应用已启动"
     
     echo ""
@@ -285,7 +285,7 @@ else
     # 8b. 卸载旧版本
     info "卸载旧版本..."
     # 忽略卸载错误，可能是应用未安装
-    adb uninstall com.express.app || true
+    adb uninstall com.tvvb.app || true
     sleep 1
     
     # 9b. 安装
@@ -295,7 +295,7 @@ else
     
     # 10b. 启动
     info "启动应用..."
-    adb shell am start -n com.express.app/.MainActivity
+    adb shell am start -n com.tvvb.app/.MainActivity
     success "应用已启动"
     
     # 显示信息

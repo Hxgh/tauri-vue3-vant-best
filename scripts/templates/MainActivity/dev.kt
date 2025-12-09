@@ -1,4 +1,4 @@
-package com.express.app
+package com.tvvb.app
 
 import android.content.res.Configuration
 import android.os.Build
@@ -155,7 +155,7 @@ class MainActivity : TauriActivity() {
         }
       }
 
-      webView?.loadUrl("http://192.168.3.81:1420")
+      webView?.loadUrl("http://192.168.3.81:1234")
     }
   }
 

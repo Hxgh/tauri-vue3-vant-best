@@ -28,7 +28,8 @@
       "Bash(npm run check:*)",
       "Bash(npx biome:*)",
       "Bash(find:*)",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "Bash(ls -la \"e:\\Dev\\github\\tauri-vue3-vant-best\\src\\styles\"\" 2>/dev/null || find \"e:Devgithubtauri-vue3-vant-best\" -path \"*/src/styles* \" -type f)"
     ],
     "deny": [],
     "ask": []

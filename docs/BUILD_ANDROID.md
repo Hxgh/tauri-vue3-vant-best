@@ -25,7 +25,7 @@ rustup target add aarch64-linux-android armv7-linux-androideabi i686-linux-andro
 adb logcat -c && adb logcat | grep -E "(MainActivity|Theme)"
 
 # 卸载/重装
-adb uninstall com.express.app
+adb uninstall com.tvvb.app
 adb install -r src-tauri/gen/android/app/build/outputs/apk/universal/debug/app-universal-debug.apk
 ```
 

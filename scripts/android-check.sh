@@ -80,11 +80,11 @@ fi
 echo ""
 
 # 检查开发服务器端口
-echo "7️⃣  检查开发服务器端口 1420..."
-if lsof -i :1420 &> /dev/null; then
-    echo "   ✅ 端口 1420 正在使用（开发服务器运行中）"
+echo "7️⃣  检查开发服务器端口 1234..."
+if lsof -i :1234 &> /dev/null; then
+    echo "   ✅ 端口 1234 正在使用（开发服务器运行中）"
 else
-    echo "   ⚠️  端口 1420 未使用"
+    echo "   ⚠️  端口 1234 未使用"
     echo "   提示：运行 'pnpm dev' 启动开发服务器"
 fi
 echo ""
