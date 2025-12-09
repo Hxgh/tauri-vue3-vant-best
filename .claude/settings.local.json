@@ -29,7 +29,12 @@
       "Bash(npx biome:*)",
       "Bash(find:*)",
       "Bash(grep:*)",
-      "Bash(ls -la \"e:\\Dev\\github\\tauri-vue3-vant-best\\src\\styles\"\" 2>/dev/null || find \"e:Devgithubtauri-vue3-vant-best\" -path \"*/src/styles* \" -type f)"
+      "Bash(ls -la \"e:\\Dev\\github\\tauri-vue3-vant-best\\src\\styles\"\" 2>/dev/null || find \"e:Devgithubtauri-vue3-vant-best\" -path \"*/src/styles* \" -type f)",
+      "Bash(npm run type-check:*)",
+      "Bash(bash:*)",
+      "Bash(\"$LOCALAPPDATA/Android/Sdk/platform-tools/adb.exe\" devices)",
+      "Bash(cmd.exe /c \"where adb\")",
+      "Bash(cmd.exe /c \"dir /s /b C:\\Users\\lhy_w\\AppData\\Local\\Android\\Sdk\\platform-tools\\adb.exe\")"
     ],
     "deny": [],
     "ask": []

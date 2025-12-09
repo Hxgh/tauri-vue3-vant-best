@@ -1,3 +1,10 @@
+/**
+ * 日志工具
+ * 生产环境自动禁用 debug 日志
+ *
+ * @module core/platform/logger
+ */
+
 type LogLevel = 'debug' | 'info' | 'warn' | 'error';
 
 const isDev = import.meta.env.DEV;

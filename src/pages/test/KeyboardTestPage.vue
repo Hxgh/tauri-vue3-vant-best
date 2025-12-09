@@ -130,11 +130,15 @@
 </template>
 
 <script setup lang="ts">
+import { showToast } from 'vant';
 import { computed, onMounted, onUnmounted, reactive, ref } from 'vue';
 import { useRouter } from 'vue-router';
-import { showToast } from 'vant';
-import MainLayout from '@/layouts/MainLayout.vue';
-import { ContentStart, HeaderMode, TabbarMode } from '@/types/layout';
+import {
+  ContentStart,
+  HeaderMode,
+  MainLayout,
+  TabbarMode,
+} from '@/core/layout';
 
 const router = useRouter();
 const form = reactive({

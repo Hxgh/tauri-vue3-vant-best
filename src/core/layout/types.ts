@@ -1,6 +1,8 @@
 /**
  * Layout 布局配置枚举
  * 用于精确控制 MainLayout 的布局行为
+ *
+ * @module core/layout/types
  */
 
 /**

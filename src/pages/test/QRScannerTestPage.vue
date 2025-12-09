@@ -2,15 +2,18 @@
 import { showToast } from 'vant';
 import { computed, ref } from 'vue';
 import { useRouter } from 'vue-router';
-import type { BarcodeScanResult } from '@/composables/useBarcodeScanner';
+import {
+  ContentStart,
+  HeaderMode,
+  MainLayout,
+  TabbarMode,
+} from '@/core/layout';
 import {
   getContentTypeLabel,
   isWebUrl,
   parseContentType,
   useBarcodeScanner,
-} from '@/composables/useBarcodeScanner';
-import MainLayout from '@/layouts/MainLayout.vue';
-import { ContentStart, HeaderMode, TabbarMode } from '@/types/layout';
+} from '@/core/scanner';
 
 const router = useRouter();
 const showScanner = ref(false);
@@ -32,7 +35,7 @@ const {
     // vibrate: true,   // 默认开启震动（可配置）
     // sound: true,     // 默认开启声音（可配置）
     autoQueryProduct: true,
-    onComplete: (result) => {
+    onComplete: () => {
       showToast({ message: '扫码完成', icon: 'success' });
       showScanner.value = false;
     },

@@ -1,66 +1,14 @@
+/**
+ * 商品查询 Composable
+ * 通过条码查询商品信息（使用 Open Food Facts API）
+ *
+ * @module core/scanner/useProductQuery
+ */
+
 import { ref } from 'vue';
-
-/**
- * 检测是否为 Tauri 环境
- */
-function isTauri(): boolean {
-  // @ts-expect-error - __TAURI__ is injected by Tauri
-  return typeof window !== 'undefined' && !!window.__TAURI__;
-}
-
-/**
- * 商品信息接口
- */
-export interface ProductInfo {
-  /** 商品名称 */
-  name: string;
-  /** 品牌 */
-  brand: string;
-  /** 商品图片 */
-  image: string;
-  /** 分类 */
-  categories: string;
-  /** 成分/配料 */
-  ingredients: string;
-  /** 营养成分 */
-  nutrition: NutritionInfo | null;
-  /** 原始数据 */
-  raw?: any;
-}
-
-/**
- * 营养成分信息
- */
-export interface NutritionInfo {
-  /** 热量 */
-  energy: string;
-  /** 蛋白质 */
-  proteins: string;
-  /** 碳水化合物 */
-  carbohydrates: string;
-  /** 脂肪 */
-  fat: string;
-  /** 糖 */
-  sugars?: string;
-  /** 钠 */
-  sodium?: string;
-  /** 纤维 */
-  fiber?: string;
-}
-
-/**
- * 商品查询结果
- */
-export interface ProductQueryResult {
-  /** 是否找到商品 */
-  found: boolean;
-  /** 商品信息 */
-  product: ProductInfo | null;
-  /** 数据来源 */
-  source: 'openfoodfacts' | 'unknown';
-  /** 错误信息 */
-  error?: string;
-}
+import { isTauriEnv } from '../platform/detect';
+import type { NutritionInfo, ProductQueryResult } from './types';
+import { isValidBarcode } from './utils';
 
 /**
  * Open Food Facts API 响应
@@ -91,13 +39,6 @@ interface OpenFoodFactsResponse {
 }
 
 /**
- * 判断是否为有效的条形码（用于商品查询）
- */
-export function isValidBarcode(code: string): boolean {
-  return /^\d{8,14}$/.test(code);
-}
-
-/**
  * 带超时的 fetch（自动选择 Tauri HTTP 或浏览器 fetch）
  */
 async function fetchWithTimeout(
@@ -106,7 +47,7 @@ async function fetchWithTimeout(
   timeout = 30000,
 ): Promise<Response> {
   // Tauri 环境使用 Tauri HTTP 插件（绕过 CORS）
-  if (isTauri()) {
+  if (isTauriEnv()) {
     const { fetch: tauriFetch } = await import('@tauri-apps/plugin-http');
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), timeout);

@@ -1,3 +1,10 @@
+/**
+ * 通知能力 Composable
+ * 提供系统通知的基础功能
+ *
+ * @module core/notification/useNotification
+ */
+
 import {
   createChannel,
   Importance,
@@ -6,10 +13,7 @@ import {
   sendNotification,
 } from '@tauri-apps/plugin-notification';
 import { ref } from 'vue';
-import type {
-  NotificationChannel,
-  NotificationOptions,
-} from '@/types/notification';
+import type { NotificationChannel, NotificationOptions } from './types';
 
 /** 默认高优先级渠道ID */
 const DEFAULT_CHANNEL_ID = 'high_priority_channel';
@@ -25,6 +29,22 @@ let channelCreated = false;
  * - 请求通知权限
  * - 创建通知渠道（Android）
  * - 发送通知（支持前台弹出）
+ *
+ * @example
+ * ```ts
+ * const { permissionGranted, send, requestPermission } = useNotification();
+ *
+ * // 检查并请求权限
+ * if (!permissionGranted.value) {
+ *   await requestPermission();
+ * }
+ *
+ * // 发送通知
+ * await send({
+ *   title: '新消息',
+ *   body: '您有一条新消息',
+ * });
+ * ```
  */
 export function useNotification() {
   const permissionGranted = ref(false);
@@ -126,6 +146,7 @@ export function useNotification() {
 
   /**
    * 发送通知
+   *
    * @param options 通知选项
    * @param highPriority 是否使用高优先级（前台也弹出），默认 true
    */
@@ -173,5 +194,3 @@ export function useNotification() {
     send,
   };
 }
-
-export type { NotificationOptions, NotificationChannel };

@@ -1,8 +1,8 @@
 <template>
   <div class="main-layout">
     <!-- 顶部Header（可选） -->
-    <div 
-      v-if="headerMode !== HeaderMode.None" 
+    <div
+      v-if="headerMode !== HeaderMode.None"
       class="header-wrapper"
       :class="{
         'header-immersive': headerMode === HeaderMode.Immersive,
@@ -11,7 +11,7 @@
     >
       <div v-if="headerMode === HeaderMode.Standard" class="safe-area-placeholder-top"></div>
       <div v-else-if="headerMode === HeaderMode.Immersive" class="immersive-status-bar"></div>
-      
+
       <slot name="header">
         <!-- 默认Header -->
         <van-nav-bar :title="headerTitle">
@@ -26,13 +26,13 @@
     </div>
 
     <!-- 无Header但需要安全区域占位（固定不滚动） -->
-    <div 
+    <div
       v-if="headerMode === HeaderMode.None && contentStart === ContentStart.SafeArea"
       class="safe-area-spacer"
     ></div>
 
     <!-- 主内容区域 -->
-    <div 
+    <div
       class="content-wrapper"
       :style="contentStyle"
     >
@@ -40,20 +40,20 @@
     </div>
 
     <!-- 底部Tabbar（可选） -->
-    <div 
-      v-if="tabbarMode === TabbarMode.Standard" 
+    <div
+      v-if="tabbarMode === TabbarMode.Standard"
       class="tabbar-wrapper"
     >
       <slot name="tabbar">
         <!-- 默认Tabbar -->
-        <van-tabbar 
-          :model-value="currentTab" 
-          :border="false" 
-          :fixed="false" 
+        <van-tabbar
+          :model-value="currentTab"
+          :border="false"
+          :fixed="false"
           @update:model-value="handleTabClick"
         >
-          <van-tabbar-item 
-            v-for="(tab, index) in tabs" 
+          <van-tabbar-item
+            v-for="(tab, index) in tabs"
             :key="index"
             :icon="tab.icon"
           >
@@ -68,7 +68,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue';
-import { ContentStart, HeaderMode, TabbarMode } from '../types/layout';
+import { ContentStart, HeaderMode, TabbarMode } from './types';
 
 interface Tab {
   label: string;
@@ -210,7 +210,24 @@ const contentStyle = computed<{ paddingTop: string; paddingBottom: string }>(
   -webkit-backdrop-filter: blur(10px);
 }
 
-/* 深色模式的沉浸式 Header 样式移到全局样式 */
+/* 深色模式的沉浸式 Header 样式 */
+@media (prefers-color-scheme: dark) {
+  .header-immersive {
+    background: linear-gradient(
+      to bottom,
+      rgba(30, 30, 30, 0.95),
+      rgba(30, 30, 30, 0.98)
+    );
+  }
+}
+
+.van-theme-dark .header-immersive {
+  background: linear-gradient(
+    to bottom,
+    rgba(30, 30, 30, 0.95),
+    rgba(30, 30, 30, 0.98)
+  );
+}
 
 .immersive-status-bar {
   height: constant(safe-area-inset-top, 0px);

@@ -1,32 +1,37 @@
+/**
+ * 原生桥接工具
+ * 提供与 Android/iOS 原生层通信的能力
+ *
+ * @module core/platform/bridge
+ */
+
 import { logger } from './logger';
 
+/**
+ * 桥接调用结果
+ */
 export interface BridgeResult<T> {
   success: boolean;
   data?: T;
   error?: string;
 }
 
-export function isTauriEnv(): boolean {
-  return typeof window !== 'undefined' && '__TAURI__' in window;
-}
-
-export function isAndroid(): boolean {
-  return (
-    typeof navigator !== 'undefined' && /android/i.test(navigator.userAgent)
-  );
-}
-
-export function isIOS(): boolean {
-  return (
-    typeof navigator !== 'undefined' &&
-    /iphone|ipad|ipod/i.test(navigator.userAgent)
-  );
-}
-
-export function isMobile(): boolean {
-  return isAndroid() || isIOS();
-}
-
+/**
+ * 调用原生桥接方法
+ *
+ * @param bridgeName 桥接对象名称（如 "AndroidMap"）
+ * @param method 方法名
+ * @param args 参数
+ * @returns 调用结果
+ *
+ * @example
+ * ```ts
+ * const result = await callBridge<boolean>('AndroidMap', 'isAppInstalled', 'com.xxx');
+ * if (result.success) {
+ *   console.log('已安装:', result.data);
+ * }
+ * ```
+ */
 export async function callBridge<T>(
   bridgeName: string,
   method: string,
@@ -55,6 +60,15 @@ export async function callBridge<T>(
   }
 }
 
+/**
+ * 异步操作降级方案
+ * 当主操作失败时，自动执行备用操作
+ *
+ * @param primary 主操作
+ * @param fallback 备用操作
+ * @param logTag 日志标签
+ * @returns 操作结果
+ */
 export async function withFallback<T>(
   primary: () => Promise<T>,
   fallback: () => Promise<T>,

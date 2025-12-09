@@ -49,8 +49,12 @@
 <script setup lang="ts">
 import { showDialog, showNotify, showToast } from 'vant';
 import AppTabbar from '@/components/AppTabbar.vue';
-import MainLayout from '@/layouts/MainLayout.vue';
-import { ContentStart, HeaderMode, TabbarMode } from '@/types/layout';
+import {
+  ContentStart,
+  HeaderMode,
+  MainLayout,
+  TabbarMode,
+} from '@/core/layout';
 
 const showNotifyFunc = () => {
   showNotify({ type: 'success', message: '通知内容' });

@@ -1,4 +1,12 @@
-/** 通知选项 */
+/**
+ * 通知系统类型定义
+ *
+ * @module core/notification/types
+ */
+
+/**
+ * 通知选项
+ */
 export interface NotificationOptions {
   /** 通知标题（必填） */
   title: string;
@@ -8,10 +16,14 @@ export interface NotificationOptions {
   channelId?: string;
 }
 
-/** 通知渠道重要性级别 */
+/**
+ * 通知渠道重要性级别
+ */
 export type ChannelImportance = 'none' | 'min' | 'low' | 'default' | 'high';
 
-/** 通知渠道配置 */
+/**
+ * 通知渠道配置
+ */
 export interface NotificationChannel {
   /** 渠道ID */
   id: string;

@@ -41,9 +41,36 @@ adb install path/to/apk      # 安装 APK
 
 ## 架构说明
 
+### 核心模块 (src/core/)
+
+项目采用模块化架构，所有核心能力封装在 `src/core/` 目录下，便于复用和维护：
+
+| 模块 | 路径 | 说明 |
+|------|------|------|
+| **platform** | `@/core/platform` | 平台检测、原生桥接、日志系统 |
+| **theme** | `@/core/theme` | 主题系统（深浅色、跟随系统） |
+| **layout** | `@/core/layout` | 布局系统（Header/Tabbar/安全区域） |
+| **scanner** | `@/core/scanner` | 扫码系统（QR/条形码、商品查询） |
+| **map** | `@/core/map` | 地图导航（高德/百度/腾讯） |
+| **notification** | `@/core/notification` | 系统通知 |
+
+**统一导入方式：**
+```typescript
+// 推荐：从具体模块导入
+import { logger, isTauriEnv } from '@/core/platform';
+import { useThemeStore } from '@/core/theme';
+import { HeaderMode, ContentStart, TabbarMode } from '@/core/layout';
+import { useBarcodeScanner } from '@/core/scanner';
+import { useMapNavigation } from '@/core/map';
+import { useNotification } from '@/core/notification';
+
+// 或从统一入口导入（适合导入多个模块）
+import { logger, useThemeStore, HeaderMode } from '@/core';
+```
+
 ### 布局系统 (三维配置)
 
-核心布局由 `MainLayout.vue` 控制，通过 `src/types/layout.ts` 定义的三个独立维度配置:
+核心布局由 `MainLayout.vue` 控制，通过 `@/core/layout` 定义的三个独立维度配置:
 
 1. **HeaderMode (头部模式)** (枚举):
    - `Standard` (0): 标准头部，位于安全区域下方，不延伸到状态栏
@@ -67,7 +94,7 @@ adb install path/to/apk      # 安装 APK
 
 ### 主题系统 (三模式架构)
 
-主题管理位于 `src/stores/theme.ts`，与原生（Android/iOS）双向同步:
+主题管理位于 `@/core/theme`，与原生（Android/iOS）双向同步:
 
 **模式:**
 - `auto`: 跟随系统主题 (使用 `@media (prefers-color-scheme: dark)`)
@@ -112,12 +139,10 @@ Vant 组件通过 `unplugin-vue-components` 和 `VantResolver` 自动导入（�
 - `tauri-plugin-http`
 - `tauri-plugin-notification`
 
-对应的组合式函数位于 `src/composables/`:
-- `useBarcodeScanner.ts`
-- `useMapNavigation.ts`
-- `useNotification.ts`
-- `useProductQuery.ts`
-- `useQRScanner.ts`
+对应的组合式函数位于 `src/core/` 各模块:
+- `@/core/scanner` - useBarcodeScanner, useQRScanner, useProductQuery
+- `@/core/map` - useMapNavigation
+- `@/core/notification` - useNotification
 
 ### 安全区域处理
 
@@ -135,7 +160,7 @@ Vant 组件通过 `unplugin-vue-components` 和 `VantResolver` 自动导入（�
 - **导入:** 使用 `@/` 别名导入 src 目录内容
 - **Vue:** Composition API + `<script setup>` + TypeScript
 - **命名:** 枚举值使用 PascalCase（如 `HeaderMode.Standard`）
-- **日志:** 使用 `@/utils/logger` 而不是 console.log（生产环境自动禁用 debug 日志）
+- **日志:** 使用 `@/core/platform` 的 logger 而不是 console.log（生产环境自动禁用 debug 日志）
 
 ## Android 构建流程
 
@@ -159,7 +184,7 @@ DEV_SERVER_PORT=1234          # 开发服务器端口
 
 ```typescript
 // 在组件中
-import { HeaderMode, ContentStart, TabbarMode } from '@/types/layout';
+import { HeaderMode, ContentStart, TabbarMode } from '@/core/layout';
 
 // 传递给 MainLayout props
 <MainLayout
@@ -175,28 +200,69 @@ import { HeaderMode, ContentStart, TabbarMode } from '@/types/layout';
 ### 使用主题 Store
 
 ```typescript
-import { useThemeStore } from '@/stores/theme';
+import { useThemeStore } from '@/core/theme';
 
 const themeStore = useThemeStore();
 themeStore.setMode('dark');  // 或 'light', 'auto'
 themeStore.toggleTheme();    // 在 light/dark 之间切换
 ```
 
-### 添加新的组合式函数
+### 使用扫码功能
 
-放置在 `src/composables/`，遵循现有模式（如 `useNotification.ts` 用于 Tauri 插件集成）
+```typescript
+import { useBarcodeScanner } from '@/core/scanner';
+
+const { scanning, lastResult, startScan, stopScan } = useBarcodeScanner({
+  autoQueryProduct: true,
+  onComplete: (result) => console.log('扫码结果:', result),
+});
+
+await startScan();
+```
+
+### 使用地图导航
+
+```typescript
+import { useMapNavigation, openMapNavigation } from '@/core/map';
+
+// 方式1: 组合式函数
+const { handleMapSelect } = useMapNavigation(30.66, 104.06, '目的地');
+await handleMapSelect('amap');
+
+// 方式2: 直接调用
+await openMapNavigation(30.66, 104.06, '目的地', 'baidu');
+```
+
+### 使用通知功能
+
+```typescript
+import { useNotification } from '@/core/notification';
+
+const { requestPermission, send } = useNotification();
+await requestPermission();
+await send({ title: '标题', body: '内容' });
+```
+
+### 添加新的核心模块
+
+在 `src/core/` 下创建新模块，遵循现有模式：
+1. 创建模块目录（如 `src/core/newmodule/`）
+2. 创建类型定义 `types.ts`
+3. 创建核心逻辑 `useXxx.ts`
+4. 创建导出入口 `index.ts`
+5. 在 `src/core/index.ts` 添加导出
 
 ### 使用工具函数
 
 ```typescript
 // 日志（生产环境自动禁用 debug）
-import { logger } from '@/utils/logger';
+import { logger } from '@/core/platform';
 logger.debug('...');  // 仅开发环境
 logger.info('...');
 logger.error('...');
 
 // 平台检测和桥接调用
-import { isTauriEnv, isAndroid, callBridge } from '@/utils/platform';
+import { isTauriEnv, isAndroid, callBridge } from '@/core/platform';
 
 if (isTauriEnv()) {
   const result = await callBridge<boolean>('AndroidMap', 'isAppInstalled', 'com.xxx');

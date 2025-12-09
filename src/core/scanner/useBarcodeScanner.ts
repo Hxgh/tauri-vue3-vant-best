@@ -1,40 +1,3 @@
-import { computed, onUnmounted, ref } from 'vue';
-import type { ScanError, ScanOptions, ScanResult } from '@/types/scanner';
-import { isLikelyProductBarcode } from '@/types/scanner';
-import type { ProductInfo, ProductQueryResult } from './useProductQuery';
-import { useProductQuery } from './useProductQuery';
-import { useQRScanner } from './useQRScanner';
-
-/**
- * 扫描完成后的完整结果
- */
-export interface BarcodeScanResult {
-  /** 扫描结果 */
-  scan: ScanResult;
-  /** 商品信息（如果是商品条码且查询成功） */
-  product: ProductInfo | null;
-  /** 是否为商品条码 */
-  isProductBarcode: boolean;
-  /** 商品查询是否完成 */
-  productQueryDone: boolean;
-}
-
-/**
- * 扫描器配置选项
- */
-export interface BarcodeScannerOptions extends ScanOptions {
-  /**
-   * 是否自动查询商品信息
-   * @default true
-   */
-  autoQueryProduct?: boolean;
-
-  /**
-   * 完整结果回调（扫描+商品查询完成后）
-   */
-  onComplete?: (result: BarcodeScanResult) => void;
-}
-
 /**
  * 条码扫描器 Composable（框架级封装）
  *
@@ -43,8 +6,44 @@ export interface BarcodeScannerOptions extends ScanOptions {
  * - 自动查询商品信息（可选）
  * - 统一的结果回调
  *
+ * @module core/scanner/useBarcodeScanner
+ */
+
+import { ref } from 'vue';
+import type {
+  BarcodeScannerOptions,
+  BarcodeScanResult,
+  ScanResult,
+} from './types';
+import { useProductQuery } from './useProductQuery';
+import { useQRScanner } from './useQRScanner';
+import { isLikelyProductBarcode } from './utils';
+
+/**
+ * 条码扫描器 Composable
+ *
  * @param options 扫描器配置
  * @param elementId 扫描器容器元素ID（Web端使用）
+ *
+ * @example
+ * ```ts
+ * const {
+ *   scanning,
+ *   lastResult,
+ *   startScan,
+ * } = useBarcodeScanner({
+ *   autoQueryProduct: true,
+ *   onComplete: (result) => {
+ *     console.log('扫描结果:', result.scan.content);
+ *     if (result.product) {
+ *       console.log('商品名称:', result.product.name);
+ *     }
+ *   },
+ * });
+ *
+ * // 开始扫描
+ * const result = await startScan();
+ * ```
  */
 export function useBarcodeScanner(
   options: BarcodeScannerOptions = {},
@@ -73,7 +72,7 @@ export function useBarcodeScanner(
   const scanner = useQRScanner(
     {
       ...scanOptions,
-      onSuccess: async (scanResult) => {
+      onSuccess: async (scanResult: ScanResult) => {
         // 判断是否为商品条码：优先使用格式信息，备用内容判断
         const isProductCode =
           scanResult.formatInfo.isProductCode ||
@@ -139,7 +138,7 @@ export function useBarcodeScanner(
    */
   const startScan = async (): Promise<BarcodeScanResult> => {
     clearProduct();
-    const scanResult = await scanner.startScan();
+    await scanner.startScan();
 
     // 等待商品查询完成
     return new Promise((resolve) => {
@@ -158,9 +157,9 @@ export function useBarcodeScanner(
   /**
    * 从图片扫描
    */
-  const scanFromImage = async (file: File): Promise<BarcodeScanResult> => {
+  const scanFromImage = async (file?: File): Promise<BarcodeScanResult> => {
     clearProduct();
-    const scanResult = await scanner.scanFromImage(file);
+    await scanner.scanFromImage(file);
 
     // 等待商品查询完成
     return new Promise((resolve) => {
@@ -207,20 +206,3 @@ export function useBarcodeScanner(
     isTauriMobile: scanner.isTauriMobile,
   };
 }
-
-// 导出类型和工具
-export type { ProductInfo, ProductQueryResult, ScanResult, ScanError };
-export type { BarcodeFormatInfo, QRContentType } from '@/types/scanner';
-export {
-  BARCODE_FORMAT_MAP,
-  BarcodeCategory,
-  BarcodeFormat,
-  getContentTypeLabel,
-  getFormatInfo,
-  inferFormatFromContent,
-  isLikelyProductBarcode,
-  isUrl,
-  isWebUrl,
-  normalizeFormat,
-  parseContentType,
-} from '@/types/scanner';

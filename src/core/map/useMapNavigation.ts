@@ -1,48 +1,40 @@
+/**
+ * 地图导航 Composable
+ * 支持高德、百度、腾讯地图的原生导航
+ *
+ * @module core/map/useMapNavigation
+ */
+
 import { invoke } from '@tauri-apps/api/core';
 import { closeToast, showLoadingToast, showToast } from 'vant';
 import { computed, ref } from 'vue';
+import type { MapApp, MapResult, MapType } from './types';
 
-// Android Bridge 类型定义
-declare global {
-  interface Window {
-    AndroidMap?: {
-      isAppInstalled: (packageName: string) => boolean;
-    };
-  }
-}
-
-export interface MapApp {
-  label: string;
-  value: 'amap' | 'baidu' | 'tencent';
-  scheme: string;
-}
-
-export interface MapResult {
-  success: boolean;
-  message: string;
-}
-
+/**
+ * 支持的地图应用列表
+ */
 const MAP_APPS: MapApp[] = [
   { label: '高德地图', value: 'amap', scheme: 'androidamap://' },
   { label: '百度地图', value: 'baidu', scheme: 'baidumap://' },
   { label: '腾讯地图', value: 'tencent', scheme: 'qqmap://' },
 ];
 
-// 地图应用包名映射
-const MAP_PACKAGES: Record<'amap' | 'baidu' | 'tencent', string> = {
+/**
+ * 地图应用包名映射
+ */
+const MAP_PACKAGES: Record<MapType, string> = {
   amap: 'com.autonavi.minimap',
   baidu: 'com.baidu.BaiduMap',
   tencent: 'com.tencent.map',
 };
 
 /**
- * 检查 Android 是否安装了指定的地图应用（实时检查，无缓存）
+ * 检查 Android 是否安装了指定的地图应用
+ *
  * @param mapType 地图类型
  * @returns 是否已安装
  */
-export async function checkMapInstalled(
-  mapType: 'amap' | 'baidu' | 'tencent',
-): Promise<boolean> {
+export async function checkMapInstalled(mapType: MapType): Promise<boolean> {
   // 检查是否在 Android 平台
   const isAndroid = navigator.userAgent.toLowerCase().includes('android');
   if (!isAndroid) {
@@ -64,7 +56,6 @@ export async function checkMapInstalled(
 
     return result.installed;
   } catch (error) {
-    // 如果检查失败，默认返回 false（不显示该地图）
     console.error('[MapCheck] Failed to check map installation:', error);
     return false;
   }
@@ -72,6 +63,7 @@ export async function checkMapInstalled(
 
 /**
  * 打开地图导航
+ *
  * @param lat 纬度
  * @param lng 经度
  * @param name 地点名称
@@ -81,7 +73,7 @@ export async function openMapNavigation(
   lat: number,
   lng: number,
   name: string,
-  mapType: 'amap' | 'baidu' | 'tencent',
+  mapType: MapType,
 ): Promise<void> {
   showLoadingToast({
     message: '正在打开地图...',
@@ -127,18 +119,34 @@ export function getMapApps(): MapApp[] {
 }
 
 /**
- * useMapNavigation Hook
+ * 地图导航 Hook
+ *
  * @param lat 纬度
  * @param lng 经度
  * @param name 地点名称
- * @returns Hook 返回值
+ *
+ * @example
+ * ```ts
+ * const { loading, mapApps, handleMapSelect } = useMapNavigation(
+ *   39.9042,
+ *   116.4074,
+ *   '北京天安门'
+ * );
+ *
+ * // 显示地图选择列表
+ * <van-action-sheet
+ *   v-model:show="showSheet"
+ *   :actions="mapApps.map(app => ({ name: app.label, value: app.value }))"
+ *   @select="(item) => handleMapSelect(item.value)"
+ * />
+ * ```
  */
 export function useMapNavigation(lat: number, lng: number, name: string) {
   const loading = ref(false);
   const mapApps = ref<MapApp[]>(MAP_APPS);
   const availableMaps = computed(() => mapApps.value);
 
-  const handleMapSelect = async (mapType: 'amap' | 'baidu' | 'tencent') => {
+  const handleMapSelect = async (mapType: MapType) => {
     loading.value = true;
     try {
       await openMapNavigation(lat, lng, name, mapType);

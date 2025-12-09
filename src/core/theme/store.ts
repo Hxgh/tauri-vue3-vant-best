@@ -1,48 +1,30 @@
+/**
+ * 主题管理 Store
+ * 提供浅色/深色/跟随系统三种模式，支持与原生系统栏同步
+ *
+ * @module core/theme/store
+ *
+ * @example
+ * ```ts
+ * import { useThemeStore } from '@/core/theme';
+ *
+ * const themeStore = useThemeStore();
+ *
+ * // 初始化（应用启动时调用一次）
+ * themeStore.initTheme();
+ *
+ * // 切换主题
+ * themeStore.setMode('dark');
+ * themeStore.toggleTheme();
+ * ```
+ */
+
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
-import { logger } from '@/utils/logger';
-
-/**
- * 主题类型
- * - 'light': 浅色模式
- * - 'dark': 深色模式
- * - 'auto': 跟随系统
- */
-export type ThemeMode = 'light' | 'dark' | 'auto';
-
-/**
- * 实际应用的主题（解析后）
- */
-export type ResolvedTheme = 'light' | 'dark';
+import { logger } from '../platform/logger';
+import type { ResolvedTheme, ThemeMode } from './types';
 
 const STORAGE_KEY = 'app-theme-mode';
-
-/**
- * iOS Theme Bridge 接口定义
- */
-interface iOSThemeBridge {
-  postMessage(data: { action: string; theme: string; mode: string }): void;
-}
-
-/**
- * 扩展 Window 接口以包含原生注入的主题
- */
-declare global {
-  interface Window {
-    /** Android 注入的系统主题 */
-    __ANDROID_SYSTEM_THEME__?: 'light' | 'dark';
-    /** iOS 注入的系统主题 */
-    __IOS_SYSTEM_THEME__?: 'light' | 'dark';
-    /** 强制主题检查回调（由原生调用） */
-    __FORCE_THEME_CHECK__?: () => void;
-    /** iOS WebKit 桥接 */
-    webkit?: {
-      messageHandlers?: {
-        iOSTheme?: iOSThemeBridge;
-      };
-    };
-  }
-}
 
 /**
  * 获取系统主题偏好
@@ -52,7 +34,6 @@ function getSystemTheme(): ResolvedTheme {
 
   try {
     // 优先使用原生注入的系统主题（更可靠）
-    // Android
     if (window.__ANDROID_SYSTEM_THEME__) {
       logger.debug(
         '[Theme] Using Android injected theme:',
@@ -61,7 +42,6 @@ function getSystemTheme(): ResolvedTheme {
       return window.__ANDROID_SYSTEM_THEME__;
     }
 
-    // iOS
     if (window.__IOS_SYSTEM_THEME__) {
       logger.debug(
         '[Theme] Using iOS injected theme:',
@@ -119,8 +99,6 @@ function resolveTheme(mode: ThemeMode): ResolvedTheme {
 
 /**
  * 应用主题到 DOM
- * @param theme 解析后的主题
- * @param mode 用户选择的主题模式
  */
 function applyTheme(theme: ResolvedTheme, mode: ThemeMode) {
   const root = document.documentElement;
@@ -128,7 +106,6 @@ function applyTheme(theme: ResolvedTheme, mode: ThemeMode) {
   logger.debug('[Theme] Applying theme:', { theme, mode });
 
   // 根据解析后的主题添加或移除 Vant 深色模式类名
-  // 注意：auto 模式下也需要类名，Vant 组件依赖它来显示深色样式
   if (theme === 'dark') {
     root.classList.add('van-theme-dark');
   } else {
@@ -149,25 +126,7 @@ function applyTheme(theme: ResolvedTheme, mode: ThemeMode) {
 }
 
 /**
- * Android Theme Bridge 接口定义
- */
-interface AndroidThemeBridge {
-  setTheme(theme: ResolvedTheme, mode: ThemeMode): void;
-}
-
-/**
- * Window 接口扩展
- */
-declare global {
-  interface Window {
-    AndroidTheme?: AndroidThemeBridge;
-  }
-}
-
-/**
  * 同步主题到原生系统栏（Android/iOS）
- * @param theme 解析后的主题
- * @param mode 用户选择的主题模式
  */
 function syncToNative(theme: ResolvedTheme, mode: ThemeMode) {
   if (typeof window === 'undefined') return;
@@ -205,14 +164,11 @@ function syncToNative(theme: ResolvedTheme, mode: ThemeMode) {
 }
 
 export const useThemeStore = defineStore('theme', () => {
-  // 状态：用户设置的主题模式（优先级最高）
+  // 状态：用户设置的主题模式
   const mode = ref<ThemeMode>(getStoredTheme() || 'auto');
 
   // 状态：实际应用的主题
   const resolvedTheme = ref<ResolvedTheme>(resolveTheme(mode.value));
-
-  // 注意：不在这里立即应用主题，等待 initTheme() 调用
-  // 这样可以确保 DOM 和 WebView 完全准备好
 
   /**
    * 设置主题模式
@@ -252,8 +208,6 @@ export const useThemeStore = defineStore('theme', () => {
         if (typeof window !== 'undefined') {
           window.__IOS_SYSTEM_THEME__ = resolvedTheme.value;
         }
-        // auto 模式下，只更新 resolvedTheme 和 data-theme 属性
-        // CSS 媒体查询会自动应用样式
         document.documentElement.setAttribute(
           'data-theme',
           resolvedTheme.value,
@@ -262,11 +216,9 @@ export const useThemeStore = defineStore('theme', () => {
       }
     };
 
-    // 现代浏览器
     if (mediaQuery.addEventListener) {
       mediaQuery.addEventListener('change', handleChange);
     } else {
-      // 旧版浏览器回退
       mediaQuery.addListener(handleChange);
     }
   }
@@ -278,7 +230,6 @@ export const useThemeStore = defineStore('theme', () => {
     if (typeof window === 'undefined') return;
 
     window.addEventListener('app-resume', () => {
-      // 重新检查并应用主题
       resolvedTheme.value = resolveTheme(mode.value);
       applyTheme(resolvedTheme.value, mode.value);
     });
@@ -299,12 +250,12 @@ export const useThemeStore = defineStore('theme', () => {
   }
 
   /**
-   * 初始化主题
+   * 初始化主题（应用启动时调用一次）
    */
   function initTheme() {
     logger.debug('[Theme] Initializing theme system');
 
-    // 暴露强制检查函数给 Android
+    // 暴露强制检查函数给原生层
     if (typeof window !== 'undefined') {
       window.__FORCE_THEME_CHECK__ = forceThemeCheck;
     }

@@ -1,39 +1,34 @@
-import type { Html5QrcodeResult } from 'html5-qrcode';
-import { Html5Qrcode, Html5QrcodeScanType } from 'html5-qrcode';
-import { closeToast, showLoadingToast, showToast } from 'vant';
-import { onUnmounted, ref } from 'vue';
-import type { ScanError, ScanOptions, ScanResult } from '@/types/scanner';
-import {
-  BarcodeFormat,
-  getFormatInfo,
-  inferFormatFromContent,
-  normalizeFormat,
-} from '@/types/scanner';
-
-/**
- * 检测是否为 Tauri 移动端环境
- */
-function isTauriMobile(): boolean {
-  // @ts-expect-error - __TAURI__ is injected by Tauri
-  const hasTauri = typeof window !== 'undefined' && !!window.__TAURI__;
-  const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-  return hasTauri && isMobile;
-}
-
 /**
  * QR扫描器 Composable（跨平台版）
  *
  * - 移动端 App：使用 Tauri 原生 barcode-scanner 插件
  * - Web/桌面端：使用 html5-qrcode 库
  * - 图片识别：统一使用 html5-qrcode
+ *
+ * @module core/scanner/useQRScanner
+ */
+
+import type { Html5QrcodeResult } from 'html5-qrcode';
+import { Html5Qrcode, Html5QrcodeScannerState } from 'html5-qrcode';
+import { closeToast, showLoadingToast, showToast } from 'vant';
+import { onUnmounted, ref } from 'vue';
+import { isTauriMobile } from '../platform/detect';
+import type { ScanError, ScanOptions, ScanResult } from './types';
+import { BarcodeFormat } from './types';
+import {
+  getFormatInfo,
+  inferFormatFromContent,
+  normalizeFormat,
+} from './utils';
+
+/**
+ * QR扫描器 Composable
+ *
+ * @param options 扫描选项
+ * @param elementId 扫描器容器元素ID（Web端使用）
  */
 export function useQRScanner(options: ScanOptions = {}, elementId?: string) {
-  const {
-    vibrate = true, // 默认开启震动
-    sound = true, // 默认开启声音
-    onSuccess,
-    onError,
-  } = options;
+  const { vibrate = true, sound = true, onSuccess, onError } = options;
 
   const scanning = ref(false);
   const result = ref<ScanResult | null>(null);
@@ -52,12 +47,12 @@ export function useQRScanner(options: ScanOptions = {}, elementId?: string) {
 
     if (isTauriMobile()) {
       try {
+        // @ts-expect-error vibrate exists in plugin but not in type definitions
         const { vibrate: tauriVibrate } = await import(
           '@tauri-apps/plugin-barcode-scanner'
         );
         await tauriVibrate();
       } catch {
-        // 降级到 navigator.vibrate
         if ('vibrate' in navigator) {
           navigator.vibrate(200);
         }
@@ -83,16 +78,13 @@ export function useQRScanner(options: ScanOptions = {}, elementId?: string) {
       oscillator.connect(gainNode);
       gainNode.connect(audioContext.destination);
 
-      // 设置音调和音量
-      oscillator.frequency.value = 1800; // 频率 1800Hz（清脆的提示音）
+      oscillator.frequency.value = 1800;
       oscillator.type = 'sine';
-      gainNode.gain.value = 0.3; // 音量 30%
+      gainNode.gain.value = 0.3;
 
-      // 播放 100ms
       oscillator.start(audioContext.currentTime);
       oscillator.stop(audioContext.currentTime + 0.1);
 
-      // 清理
       oscillator.onended = () => {
         audioContext.close();
       };
@@ -159,7 +151,6 @@ export function useQRScanner(options: ScanOptions = {}, elementId?: string) {
         windowed: false,
       });
 
-      // 处理 Tauri 返回的 format（可能是字符串、枚举或对象）
       let rawFormat = 'UNKNOWN';
       if (scanResult.format !== undefined && scanResult.format !== null) {
         if (typeof scanResult.format === 'string') {
@@ -175,7 +166,6 @@ export function useQRScanner(options: ScanOptions = {}, elementId?: string) {
       }
 
       let formatType = normalizeFormat(rawFormat);
-      // 如果格式未知，尝试从内容推断
       if (formatType === BarcodeFormat.UNKNOWN) {
         const inferredFormat = inferFormatFromContent(scanResult.content);
         if (inferredFormat !== BarcodeFormat.UNKNOWN) {
@@ -255,7 +245,6 @@ export function useQRScanner(options: ScanOptions = {}, elementId?: string) {
           const rawFormat =
             decodedResult.result?.format?.formatName || 'UNKNOWN';
           let formatType = normalizeFormat(rawFormat);
-          // 如果格式未知，尝试从内容推断
           if (formatType === BarcodeFormat.UNKNOWN) {
             const inferredFormat = inferFormatFromContent(decodedText);
             if (inferredFormat !== BarcodeFormat.UNKNOWN) {
@@ -278,7 +267,6 @@ export function useQRScanner(options: ScanOptions = {}, elementId?: string) {
 
           onSuccess?.(resultData);
 
-          // 自动停止并返回结果
           stopScan()
             .then(() => resolve(resultData))
             .catch(() => resolve(resultData));
@@ -301,7 +289,6 @@ export function useQRScanner(options: ScanOptions = {}, elementId?: string) {
           undefined,
         );
 
-        // 获取媒体流用于手电筒控制
         try {
           const videoElement = document.querySelector(
             `#${elementId} video`,
@@ -378,7 +365,6 @@ export function useQRScanner(options: ScanOptions = {}, elementId?: string) {
       return;
     }
 
-    // 关闭手电筒
     if (torchOn.value && currentStream) {
       try {
         const videoTrack = currentStream.getVideoTracks()[0];
@@ -402,7 +388,7 @@ export function useQRScanner(options: ScanOptions = {}, elementId?: string) {
 
     try {
       const state = await scannerInstance.getState();
-      if (state === Html5QrcodeScanType.SCAN_TYPE_CAMERA) {
+      if (state === Html5QrcodeScannerState.SCANNING) {
         await scannerInstance.stop();
       }
       await scannerInstance.clear();
@@ -446,13 +432,10 @@ export function useQRScanner(options: ScanOptions = {}, elementId?: string) {
 
   /**
    * 从图片识别二维码
-   * - 移动端：使用 Tauri dialog 插件选择图片
-   * - Web端：接收 File 对象
    */
   const scanFromImage = async (file?: File): Promise<ScanResult> => {
     let imageFile: File | null = file || null;
 
-    // 移动端使用 Tauri dialog 选择图片
     if (isTauriMobile() && !imageFile) {
       try {
         const { open } = await import('@tauri-apps/plugin-dialog');
@@ -477,7 +460,6 @@ export function useQRScanner(options: ScanOptions = {}, elementId?: string) {
           throw cancelError;
         }
 
-        // 读取文件内容
         const filePath = typeof selected === 'string' ? selected : selected;
         const fileData = await readFile(filePath);
         const fileName = filePath.split('/').pop() || 'image.jpg';
@@ -539,7 +521,6 @@ export function useQRScanner(options: ScanOptions = {}, elementId?: string) {
       closeToast();
 
       if (scanResult) {
-        // 图片扫描无法获取格式信息，从内容推断
         const inferredFormat = inferFormatFromContent(scanResult);
         const formatType = inferredFormat;
         const formatInfo = getFormatInfo(formatType);
@@ -602,7 +583,6 @@ export function useQRScanner(options: ScanOptions = {}, elementId?: string) {
     await stopScan();
   };
 
-  // 组件卸载时自动清理
   onUnmounted(() => {
     destroy();
   });

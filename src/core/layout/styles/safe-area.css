@@ -1,6 +1,15 @@
 /**
  * 移动端安全区域适配
  * 适用于 iOS 刘海屏、Android 异形屏等设备
+ *
+ * 使用方式：
+ * 在入口文件引入：import '@/core/layout/styles/safe-area.css';
+ *
+ * CSS 变量说明：
+ * - --sat: 顶部安全区域（状态栏高度）
+ * - --sab: 底部安全区域（Home Indicator）
+ * - --sal / --sar: 左右安全区域（横屏时使用）
+ * - --skb: 键盘高度（由原生层注入）
  */
 
 /* biome-ignore lint/correctness/noUnknownFunction: constant() is for iOS 11.0-11.2 compatibility */
@@ -115,4 +124,26 @@ body {
   .prevent-bounce {
     overscroll-behavior: contain;
   }
+}
+
+/* ==================== 沉浸式 Header 深色模式 ==================== */
+
+/* 跟随系统 */
+@media (prefers-color-scheme: dark) {
+  .header-immersive {
+    background: linear-gradient(
+      to bottom,
+      rgba(30, 30, 30, 0.95),
+      rgba(30, 30, 30, 0.98)
+    );
+  }
+}
+
+/* 手动切换 */
+.van-theme-dark .header-immersive {
+  background: linear-gradient(
+    to bottom,
+    rgba(30, 30, 30, 0.95),
+    rgba(30, 30, 30, 0.98)
+  );
 }

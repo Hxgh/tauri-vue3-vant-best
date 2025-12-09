@@ -82,9 +82,13 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { useRouter } from 'vue-router';
-import MainLayout from '@/layouts/MainLayout.vue';
-import { useThemeStore } from '@/stores/theme';
-import { ContentStart, HeaderMode, TabbarMode } from '@/types/layout';
+import {
+  ContentStart,
+  HeaderMode,
+  MainLayout,
+  TabbarMode,
+} from '@/core/layout';
+import { useThemeStore } from '@/core/theme';
 
 const router = useRouter();
 const themeStore = useThemeStore();
