@@ -45,6 +45,7 @@
  * 参考实现见本项目的 `src-tauri/src/lib.rs`
  */
 
+export { default as MapNavigationButton } from './components/MapNavigationButton.vue';
 export type { MapApp, MapResult, MapType } from './types';
 export {
   checkMapInstalled,

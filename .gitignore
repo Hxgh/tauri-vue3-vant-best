@@ -17,15 +17,17 @@ target/
 Thumbs.db
 
 # IDE
-.vscode/*
-!.vscode/extensions.json
-.idea
-
-# Tauri generated
-src-tauri/gen/android/app/src/main/java/com/express/app/generated/
+.vscode/
 .idea/
 *.swp
 *.swo
+
+# AI Tools (本地配置，不同步)
+.claude/
+.cursor/
+
+# Auto generated
+src/components.d.ts
 
 # Rspack
 .rspack-profile-*/
@@ -33,6 +35,8 @@ src-tauri/gen/android/app/src/main/java/com/express/app/generated/
 # Tauri
 src-tauri/target/
 src-tauri/gen/schemas/
+src-tauri/gen/android/
 
-# Husky
-.husky/_/
+# Lock files
+package-lock.json
+pnpm-lock.yaml

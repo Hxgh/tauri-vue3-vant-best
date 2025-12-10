@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import { useRouter } from 'vue-router';
-import MapNavigationButton from '@/components/MapNavigationButton.vue';
 import {
   ContentStart,
   HeaderMode,
   MainLayout,
   TabbarMode,
 } from '@/core/layout';
+import { MapNavigationButton } from '@/core/map';
 
 const router = useRouter();
 

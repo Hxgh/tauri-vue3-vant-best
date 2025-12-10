@@ -4,7 +4,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 项目概述
 
-基于 Tauri 2 + Vue 3 + Vant 4 的跨平台移动应用，具备先进的布局系统和主题系统。
+基于 Tauri 2 + Vue 3 + Vant 4 的跨平台移动应用模板工程，为 Tauri Vue3 Vant Android/iOS 提供框架级解决方案。
+
+**定位:** 作为模板工程，核心能力集中在 `src/core/` 目录，便于业务项目复用和长期升级维护。
 
 **技术栈:**
 - 前端: Vue 3 + TypeScript + Vant 4
@@ -39,6 +41,34 @@ adb install path/to/apk      # 安装 APK
 
 **重要:** 提交代码时会自动运行 lint（通过 husky + lint-staged）。构建 Android 开发模式前，必须先启动开发服务器。
 
+## 目录结构
+
+```
+src/
+├── core/                    # 🔒 核心能力（业务项目复用）
+│   ├── platform/            # 平台检测、桥接、日志
+│   ├── theme/               # 主题系统
+│   ├── layout/              # 布局系统
+│   │   ├── MainLayout.vue
+│   │   └── components/      # AppTabbar, FixedBottom, ImmersiveNavbar...
+│   ├── scanner/             # 扫码
+│   ├── map/                 # 地图导航
+│   │   └── components/      # MapNavigationButton
+│   ├── notification/        # 通知
+│   └── index.ts             # 统一导出 + 版本号
+│
+├── demo/                    # 📝 示例页面（业务项目删除）
+│   ├── routes.ts            # 示例路由配置
+│   ├── Page1/2/3.vue        # Tab 页面示例
+│   └── test/                # 功能测试页面
+│
+├── router/                  # 路由配置
+├── App.vue                  # 应用入口
+└── index.ts                 # 主入口
+```
+
+**业务项目使用:** 复制 `src/core/` 目录，删除 `src/demo/`，按需修改路由和页面。
+
 ## 架构说明
 
 ### 核心模块 (src/core/)
@@ -65,7 +95,8 @@ import { useMapNavigation } from '@/core/map';
 import { useNotification } from '@/core/notification';
 
 // 或从统一入口导入（适合导入多个模块）
-import { logger, useThemeStore, HeaderMode } from '@/core';
+import { logger, useThemeStore, HeaderMode, CORE_VERSION } from '@/core';
+console.log('Core version:', CORE_VERSION); // 1.0.0
 ```
 
 ### 布局系统 (三维配置)
@@ -114,6 +145,37 @@ import { logger, useThemeStore, HeaderMode } from '@/core';
 - `syncToNative()`: 调用 Android/iOS 桥接同步系统栏颜色
 - `initTheme()`: 应用启动时调用一次，设置监听器
 - iOS Bridge: `src-tauri/gen/apple/Sources/app/NativeBridge.mm` 注册 `window.webkit.messageHandlers.iOSTheme`、同步 `__IOS_SYSTEM_THEME__` 与 Safe Area CSS 变量
+
+**⚠️ 重要：index.html 防闪屏配置**
+
+`index.html` 中包含防止深色模式闪白屏的关键代码，业务项目必须保留：
+
+```html
+<!-- 首屏样式 -->
+<style>
+  :root {
+    --first-screen-bg-light: #f7f8fa;
+    --first-screen-bg-dark: #141414;
+  }
+  html.light { background-color: var(--first-screen-bg-light); }
+  html.dark { background-color: var(--first-screen-bg-dark); }
+</style>
+
+<!-- 防闪屏脚本（在 Vue 加载前执行） -->
+<script>
+  (function() {
+    const storedMode = localStorage.getItem('app-theme-mode') || 'auto';
+    let theme = storedMode;
+    if (storedMode === 'auto') {
+      theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    }
+    document.documentElement.classList.add(theme);
+    document.documentElement.setAttribute('data-theme', theme);
+  })();
+</script>
+```
+
+此脚本在 HTML 解析时立即执行，避免 Vue 加载期间的白屏闪烁。localStorage key `app-theme-mode` 与 `@/core/theme` 保持一致。
 
 ### 路由和导航
 
@@ -270,9 +332,25 @@ if (isTauriEnv()) {
 }
 ```
 
+## 业务项目升级指南
+
+1. **Git Subtree 方式（推荐）:**
+   ```bash
+   # 添加模板仓库为远程
+   git remote add template https://github.com/xxx/tauri-vue3-vant-best.git
+   # 拉取 core 目录更新
+   git subtree pull --prefix=src/core template main --squash
+   ```
+
+2. **手动复制方式:**
+   - 对比 `CORE_VERSION` 版本号
+   - 复制新版 `src/core/` 覆盖旧版
+   - 检查 breaking changes
+
 ## 重要提示
 
 - Android 开发构建前务必确保开发服务器正在运行
 - 主题系统需要在应用初始化时调用 `initTheme()`
 - 布局系统自动处理安全区域 - 大多数情况下避免手动设置 padding
 - Android 桥接方法在纯 Web 模式下可能不可用 - 始终检查是否存在
+- `src/demo/` 是示例代码，业务项目可直接删除

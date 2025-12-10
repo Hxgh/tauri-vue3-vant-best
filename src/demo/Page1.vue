@@ -97,8 +97,8 @@
 
 <script setup lang="ts">
 import { useRouter } from 'vue-router';
-import AppTabbar from '@/components/AppTabbar.vue';
 import {
+  AppTabbar,
   ContentStart,
   HeaderMode,
   MainLayout,

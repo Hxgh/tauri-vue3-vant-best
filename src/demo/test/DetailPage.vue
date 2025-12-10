@@ -68,9 +68,9 @@
 <script setup lang="ts">
 import { showToast } from 'vant';
 import { useRouter } from 'vue-router';
-import FixedBottom from '@/components/FixedBottom.vue';
 import {
   ContentStart,
+  FixedBottom,
   HeaderMode,
   MainLayout,
   TabbarMode,

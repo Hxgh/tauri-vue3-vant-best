@@ -85,11 +85,11 @@
 <script setup lang="ts">
 import { showToast } from 'vant';
 import { ref } from 'vue';
-import ImmersiveBottomBar from '@/components/ImmersiveBottomBar.vue';
-import ImmersiveNavbar from '@/components/ImmersiveNavbar.vue';
 import {
   ContentStart,
   HeaderMode,
+  ImmersiveBottomBar,
+  ImmersiveNavbar,
   MainLayout,
   TabbarMode,
 } from '@/core/layout';

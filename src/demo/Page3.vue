@@ -139,8 +139,8 @@
 <script setup lang="ts">
 import { showToast } from 'vant';
 import { computed, ref } from 'vue';
-import AppTabbar from '@/components/AppTabbar.vue';
 import {
+  AppTabbar,
   ContentStart,
   HeaderMode,
   MainLayout,

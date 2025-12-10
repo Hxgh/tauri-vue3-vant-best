@@ -4,6 +4,7 @@
  * 本模块提供 Tauri + Vue 3 + Vant 应用的基础能力，可直接复制到其他项目使用。
  *
  * @module core
+ * @version 1.0.0
  *
  * ## 包含的能力
  *
@@ -65,8 +66,12 @@
 export type { LayoutConfig } from './layout';
 // ============ Layout 布局系统 ============
 export {
+  AppTabbar,
   ContentStart,
+  FixedBottom,
   HeaderMode,
+  ImmersiveBottomBar,
+  ImmersiveNavbar,
   LayoutPresets,
   MainLayout,
   TabbarMode,
@@ -76,6 +81,7 @@ export type { MapApp, MapResult, MapType } from './map';
 export {
   checkMapInstalled,
   getMapApps,
+  MapNavigationButton,
   openMapNavigation,
   useMapNavigation,
 } from './map';
@@ -134,3 +140,7 @@ export {
 export type { ResolvedTheme, ThemeMode } from './theme';
 // ============ Theme 主题系统 ============
 export { useThemeStore } from './theme';
+
+// ============ 版本信息 ============
+/** Core 模块版本号 */
+export const CORE_VERSION = '1.0.0';

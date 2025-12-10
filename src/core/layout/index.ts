@@ -77,6 +77,10 @@
  */
 
 export { default as MainLayout } from './MainLayout.vue';
+export { default as AppTabbar } from './components/AppTabbar.vue';
+export { default as FixedBottom } from './components/FixedBottom.vue';
+export { default as ImmersiveBottomBar } from './components/ImmersiveBottomBar.vue';
+export { default as ImmersiveNavbar } from './components/ImmersiveNavbar.vue';
 export type { LayoutConfig } from './types';
 export {
   ContentStart,

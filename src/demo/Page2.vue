@@ -48,8 +48,8 @@
 
 <script setup lang="ts">
 import { showDialog, showNotify, showToast } from 'vant';
-import AppTabbar from '@/components/AppTabbar.vue';
 import {
+  AppTabbar,
   ContentStart,
   HeaderMode,
   MainLayout,

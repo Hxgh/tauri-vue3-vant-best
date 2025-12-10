@@ -20,6 +20,7 @@ export default defineConfig({
       plugins: [
         Components({
           resolvers: [VantResolver()],
+          dts: 'src/components.d.ts', // 生成到 src 目录
         }),
       ],
     },

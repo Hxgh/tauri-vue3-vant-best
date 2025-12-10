@@ -85,10 +85,10 @@
 import { showToast } from 'vant';
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
-import ImmersiveNavbar from '@/components/ImmersiveNavbar.vue';
 import {
   ContentStart,
   HeaderMode,
+  ImmersiveNavbar,
   MainLayout,
   TabbarMode,
 } from '@/core/layout';
