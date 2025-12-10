@@ -1,23 +1,6 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
     <!-- Base application theme. -->
     <style name="Theme.app" parent="Theme.MaterialComponents.DayNight.NoActionBar">
-        <!-- 浅色模式 -->
-        <!-- 启用系统栏背景绘制 -->
-        <item name="android:windowDrawsSystemBarBackgrounds">true</item>
-        
-        <!-- 状态栏颜色（顶部） - 透明 -->
-        <item name="android:statusBarColor">@android:color/transparent</item>
-        <!-- 状态栏图标使用深色（适配白色背景） -->
-        <item name="android:windowLightStatusBar" tools:targetApi="m">true</item>
-        
-        <!-- 导航栏颜色（底部虚拟按键区域） - 透明 -->
-        <item name="android:navigationBarColor">@android:color/transparent</item>
-        <!-- 导航栏图标使用深色（适配白色背景） -->
-        <item name="android:windowLightNavigationBar" tools:targetApi="o">true</item>
-        <!-- 禁用系统自动调整导航栏对比度（Android 10+） -->
-        <item name="android:enforceNavigationBarContrast" tools:targetApi="q">false</item>
-        
-        <!-- 窗口背景色 -->
-        <item name="android:windowBackground">@color/white</item>
+        <!-- Customize your theme here. -->
     </style>
 </resources>
