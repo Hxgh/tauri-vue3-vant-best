@@ -15,3 +15,6 @@ dist/
 .vscode/*
 !.vscode/extensions.json
 .idea
+
+# Tauri generated
+src-tauri/gen/android/app/src/main/java/com/express/app/generated/
