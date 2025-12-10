@@ -11,7 +11,8 @@
       "Bash(npx vue-tsc:*)",
       "Bash(find:*)",
       "Bash(grep:*)",
-      "Bash(cat:*)"
+      "Bash(cat:*)",
+      "Bash(adb logcat:*)"
     ],
     "deny": [],
     "ask": []
