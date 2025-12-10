@@ -5,7 +5,13 @@
       "Bash(adb install:*)",
       "Bash(mv:*)",
       "Bash(npm run type-check:*)",
-      "Bash(npm run build:*)"
+      "Bash(npm run build:*)",
+      "Bash(pnpm build:*)",
+      "Bash(npm run:*)",
+      "Bash(npx vue-tsc:*)",
+      "Bash(find:*)",
+      "Bash(grep:*)",
+      "Bash(cat:*)"
     ],
     "deny": [],
     "ask": []
