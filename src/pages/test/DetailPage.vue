@@ -69,8 +69,12 @@
 import { showToast } from 'vant';
 import { useRouter } from 'vue-router';
 import FixedBottom from '@/components/FixedBottom.vue';
-import MainLayout from '@/layouts/MainLayout.vue';
-import { ContentStart, HeaderMode, TabbarMode } from '@/types/layout';
+import {
+  ContentStart,
+  HeaderMode,
+  MainLayout,
+  TabbarMode,
+} from '@/core/layout';
 
 const router = useRouter();
 

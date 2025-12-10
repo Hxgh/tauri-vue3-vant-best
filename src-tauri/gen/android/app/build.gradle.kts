@@ -51,11 +51,6 @@ android {
     buildFeatures {
         buildConfig = true
     }
-    bundle {
-        language.enableSplit = false
-        density.enableSplit = false
-        abi.enableSplit = false
-    }
 }
 
 rust {

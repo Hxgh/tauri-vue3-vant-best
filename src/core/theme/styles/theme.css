@@ -1,0 +1,319 @@
+/**
+ * 主题配置
+ * 支持浅色和深色模式
+ *
+ * 使用方式：
+ * 1. 在入口文件引入：import '@/core/theme/styles/theme.css';
+ * 2. 通过 useThemeStore 控制主题切换
+ *
+ * CSS 变量命名规范：
+ * - --color-bg-*: 背景色
+ * - --color-text-*: 文字颜色
+ * - --color-border-*: 边框颜色
+ * - --color-*: 品牌色/功能色
+ * - --navbar-*: 导航栏相关
+ * - --tabbar-*: 底栏相关
+ * - --safe-area-*: 安全区域相关
+ */
+
+/* ==================== 浅色模式（默认） ==================== */
+:root {
+  /* 立即应用背景色，防止白屏 */
+  background-color: #f7f8fa;
+  color: #323233;
+
+  /* 基础颜色 */
+  --color-bg-primary: #ffffff;
+  --color-bg-secondary: #f7f8fa;
+  --color-bg-tertiary: #f2f3f5;
+
+  /* 文字颜色 */
+  --color-text-primary: #323233;
+  --color-text-secondary: #646566;
+  --color-text-tertiary: #969799;
+
+  /* 边框颜色 */
+  --color-border: #ebedf0;
+  --color-border-light: #f2f3f5;
+
+  /* 品牌色 */
+  --color-primary: #1989fa;
+  --color-success: #07c160;
+  --color-warning: #ff976a;
+  --color-danger: #ee0a24;
+
+  /* 组件背景色 */
+  --navbar-bg: #ffffff;
+  --tabbar-bg: #ffffff;
+  --card-bg: #ffffff;
+
+  /* 安全区域背景色 */
+  --safe-area-top-bg: #ffffff;
+  --safe-area-bottom-bg: #ffffff;
+
+  /* 阴影 */
+  --shadow-light: 0 2px 12px rgba(100, 101, 102, 0.12);
+  --shadow-medium: 0 4px 20px rgba(100, 101, 102, 0.15);
+}
+
+/* ==================== 深色模式 ==================== */
+/* 方式1：跟随系统（Android/iOS 自动切换） - 仅在 auto 模式下生效 */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) {
+    /* 立即应用背景色，防止白屏 */
+    background-color: #141414;
+    color: #e5e5e5;
+
+    /* 基础颜色 */
+    --color-bg-primary: #1e1e1e;
+    --color-bg-secondary: #141414;
+    --color-bg-tertiary: #2a2a2a;
+
+    /* 文字颜色 */
+    --color-text-primary: #e5e5e5;
+    --color-text-secondary: #a8a8a8;
+    --color-text-tertiary: #707070;
+
+    /* 边框颜色 */
+    --color-border: #3a3a3a;
+    --color-border-light: #2a2a2a;
+
+    /* 品牌色（深色模式下稍微调亮） */
+    --color-primary: #3a9eff;
+    --color-success: #34c759;
+    --color-warning: #ff9f0a;
+    --color-danger: #ff453a;
+
+    /* 组件背景色 */
+    --navbar-bg: #1e1e1e;
+    --tabbar-bg: #1e1e1e;
+    --card-bg: #2a2a2a;
+
+    /* 安全区域背景色（与对应组件保持一致） */
+    --safe-area-top-bg: #1e1e1e;
+    --safe-area-bottom-bg: #1e1e1e;
+
+    /* 阴影 */
+    --shadow-light: 0 2px 12px rgba(0, 0, 0, 0.3);
+    --shadow-medium: 0 4px 20px rgba(0, 0, 0, 0.4);
+  }
+}
+
+/* 方式2：手动切换 - 显式浅色主题（覆盖系统深色） */
+:root[data-theme="light"] {
+  /* 立即应用背景色，防止白屏 */
+  background-color: #f7f8fa;
+  color: #323233;
+
+  /* 基础颜色 */
+  --color-bg-primary: #ffffff;
+  --color-bg-secondary: #f7f8fa;
+  --color-bg-tertiary: #f2f3f5;
+
+  /* 文字颜色 */
+  --color-text-primary: #323233;
+  --color-text-secondary: #646566;
+  --color-text-tertiary: #969799;
+
+  /* 边框颜色 */
+  --color-border: #ebedf0;
+  --color-border-light: #f2f3f5;
+
+  /* 品牌色 */
+  --color-primary: #1989fa;
+  --color-success: #07c160;
+  --color-warning: #ff976a;
+  --color-danger: #ee0a24;
+
+  /* 组件背景色 */
+  --navbar-bg: #ffffff;
+  --tabbar-bg: #ffffff;
+  --card-bg: #ffffff;
+
+  /* 安全区域背景色 */
+  --safe-area-top-bg: #ffffff;
+  --safe-area-bottom-bg: #ffffff;
+
+  /* 阴影 */
+  --shadow-light: 0 2px 12px rgba(100, 101, 102, 0.12);
+  --shadow-medium: 0 4px 20px rgba(100, 101, 102, 0.15);
+}
+
+/* 方式3：手动切换 - 显式深色主题 */
+:root[data-theme="dark"],
+.van-theme-dark {
+  /* 立即应用背景色，防止白屏 */
+  background-color: #141414;
+  color: #e5e5e5;
+
+  /* 基础颜色 */
+  --color-bg-primary: #1e1e1e;
+  --color-bg-secondary: #141414;
+  --color-bg-tertiary: #2a2a2a;
+
+  /* 文字颜色 */
+  --color-text-primary: #e5e5e5;
+  --color-text-secondary: #a8a8a8;
+  --color-text-tertiary: #707070;
+
+  /* 边框颜色 */
+  --color-border: #3a3a3a;
+  --color-border-light: #2a2a2a;
+
+  /* 品牌色（深色模式下稍微调亮） */
+  --color-primary: #3a9eff;
+  --color-success: #34c759;
+  --color-warning: #ff9f0a;
+  --color-danger: #ff453a;
+
+  /* 组件背景色 */
+  --navbar-bg: #1e1e1e;
+  --tabbar-bg: #1e1e1e;
+  --card-bg: #2a2a2a;
+
+  /* 安全区域背景色（与对应组件保持一致） */
+  --safe-area-top-bg: #1e1e1e;
+  --safe-area-bottom-bg: #1e1e1e;
+
+  /* 阴影 */
+  --shadow-light: 0 2px 12px rgba(0, 0, 0, 0.3);
+  --shadow-medium: 0 4px 20px rgba(0, 0, 0, 0.4);
+}
+
+/* ==================== Vant 组件深色模式适配 ==================== */
+/* 跟随系统 - 仅在 auto 模式下生效 */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) {
+    --van-background: var(--color-bg-primary);
+    --van-background-2: var(--color-bg-secondary);
+    --van-text-color: var(--color-text-primary);
+    --van-text-color-2: var(--color-text-secondary);
+    --van-text-color-3: var(--color-text-tertiary);
+    --van-border-color: var(--color-border);
+    --van-card-background: var(--card-bg);
+
+    /* NavBar */
+    --van-nav-bar-background: var(--navbar-bg);
+    --van-nav-bar-text-color: var(--color-text-primary);
+    --van-nav-bar-title-text-color: var(--color-text-primary);
+    --van-nav-bar-icon-color: var(--color-text-primary);
+
+    /* Tabbar */
+    --van-tabbar-background: var(--tabbar-bg);
+    --van-tabbar-item-text-color: var(--color-text-secondary);
+    --van-tabbar-item-active-color: var(--color-primary);
+
+    /* Cell */
+    --van-cell-background: var(--color-bg-primary);
+    --van-cell-text-color: var(--color-text-primary);
+    --van-cell-label-color: var(--color-text-secondary);
+
+    /* Dialog */
+    --van-dialog-background: var(--color-bg-primary);
+    --van-dialog-message-text-color: var(--color-text-primary);
+
+    /* Overlay */
+    --van-overlay-background: rgba(0, 0, 0, 0.7);
+  }
+}
+
+/* 手动切换 */
+.van-theme-dark {
+  --van-background: var(--color-bg-primary);
+  --van-background-2: var(--color-bg-secondary);
+  --van-text-color: var(--color-text-primary);
+  --van-text-color-2: var(--color-text-secondary);
+  --van-text-color-3: var(--color-text-tertiary);
+  --van-border-color: var(--color-border);
+  --van-card-background: var(--card-bg);
+
+  /* NavBar */
+  --van-nav-bar-background: var(--navbar-bg);
+  --van-nav-bar-text-color: var(--color-text-primary);
+  --van-nav-bar-title-text-color: var(--color-text-primary);
+  --van-nav-bar-icon-color: var(--color-text-primary);
+
+  /* Tabbar */
+  --van-tabbar-background: var(--tabbar-bg);
+  --van-tabbar-item-text-color: var(--color-text-secondary);
+  --van-tabbar-item-active-color: var(--color-primary);
+
+  /* Cell */
+  --van-cell-background: var(--color-bg-primary);
+  --van-cell-text-color: var(--color-text-primary);
+  --van-cell-label-color: var(--color-text-secondary);
+
+  /* Dialog */
+  --van-dialog-background: var(--color-bg-primary);
+  --van-dialog-message-text-color: var(--color-text-primary);
+
+  /* Overlay */
+  --van-overlay-background: rgba(0, 0, 0, 0.7);
+}
+
+/* 显式浅色主题的 Vant 组件变量（覆盖系统深色） */
+:root[data-theme="light"] {
+  --van-background: var(--color-bg-primary);
+  --van-background-2: var(--color-bg-secondary);
+  --van-text-color: var(--color-text-primary);
+  --van-text-color-2: var(--color-text-secondary);
+  --van-text-color-3: var(--color-text-tertiary);
+  --van-border-color: var(--color-border);
+  --van-card-background: var(--card-bg);
+  --van-nav-bar-background: var(--navbar-bg);
+  --van-nav-bar-text-color: var(--color-text-primary);
+  --van-nav-bar-title-text-color: var(--color-text-primary);
+  --van-nav-bar-icon-color: var(--color-text-primary);
+  --van-tabbar-background: var(--tabbar-bg);
+  --van-tabbar-item-text-color: var(--color-text-secondary);
+  --van-tabbar-item-active-color: var(--color-primary);
+  --van-cell-background: var(--color-bg-primary);
+  --van-cell-text-color: var(--color-text-primary);
+  --van-cell-label-color: var(--color-text-secondary);
+  --van-dialog-background: var(--color-bg-primary);
+  --van-dialog-message-text-color: var(--color-text-primary);
+  --van-overlay-background: rgba(0, 0, 0, 0.5);
+}
+
+/* 显式深色主题的 Vant 组件变量 */
+:root[data-theme="dark"] {
+  --van-background: var(--color-bg-primary);
+  --van-background-2: var(--color-bg-secondary);
+  --van-text-color: var(--color-text-primary);
+  --van-text-color-2: var(--color-text-secondary);
+  --van-text-color-3: var(--color-text-tertiary);
+  --van-border-color: var(--color-border);
+  --van-card-background: var(--card-bg);
+  --van-nav-bar-background: var(--navbar-bg);
+  --van-nav-bar-text-color: var(--color-text-primary);
+  --van-nav-bar-title-text-color: var(--color-text-primary);
+  --van-nav-bar-icon-color: var(--color-text-primary);
+  --van-tabbar-background: var(--tabbar-bg);
+  --van-tabbar-item-text-color: var(--color-text-secondary);
+  --van-tabbar-item-active-color: var(--color-primary);
+  --van-cell-background: var(--color-bg-primary);
+  --van-cell-text-color: var(--color-text-primary);
+  --van-cell-label-color: var(--color-text-secondary);
+  --van-dialog-background: var(--color-bg-primary);
+  --van-dialog-message-text-color: var(--color-text-primary);
+  --van-overlay-background: rgba(0, 0, 0, 0.7);
+}
+
+/* ==================== 平滑过渡 ==================== */
+/* 只给特定元素添加过渡，避免影响性能和主题切换 */
+.main-layout,
+.van-cell,
+.van-nav-bar,
+.van-tabbar {
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease,
+    border-color 0.3s ease,
+    box-shadow 0.3s ease;
+}
+
+/* 避免过渡影响动画性能的元素 */
+.no-transition,
+.no-transition * {
+  transition: none;
+}
