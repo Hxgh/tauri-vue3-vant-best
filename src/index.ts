@@ -8,12 +8,11 @@ import 'vant/lib/index.css';
 
 // 引入应用样式（按顺序加载）
 import './index.css';
-import './styles/safe-area.css';
-import './styles/theme.css';
-import './styles/layout.css';
+import '@/core/layout/styles/safe-area.css';
+import '@/core/theme/styles/theme.css';
 
 // 引入主题 store
-import { useThemeStore } from './stores/theme';
+import { useThemeStore } from '@/core/theme';
 
 const pinia = createPinia();
 const app = createApp(App);

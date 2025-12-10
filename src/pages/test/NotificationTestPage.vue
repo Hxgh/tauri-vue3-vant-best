@@ -48,15 +48,20 @@
 </template>
 
 <script setup lang="ts">
+import { showToast } from 'vant';
 import { onMounted } from 'vue';
 import { useRouter } from 'vue-router';
-import { showToast } from 'vant';
-import MainLayout from '@/layouts/MainLayout.vue';
-import { useNotification } from '@/composables/useNotification';
-import { ContentStart, HeaderMode, TabbarMode } from '@/types/layout';
+import {
+  ContentStart,
+  HeaderMode,
+  MainLayout,
+  TabbarMode,
+} from '@/core/layout';
+import { useNotification } from '@/core/notification';
 
 const router = useRouter();
-const { permissionGranted, loading, checkPermission, requestPermission, send } = useNotification();
+const { permissionGranted, loading, checkPermission, requestPermission, send } =
+  useNotification();
 
 onMounted(() => {
   checkPermission();
@@ -89,7 +94,7 @@ async function sendWithBody() {
   try {
     await send({
       title: '测试通知',
-      body: '这是一条来自 Tauri 应用的通知消息'
+      body: '这是一条来自 Tauri 应用的通知消息',
     });
     showToast('通知已发送');
   } catch (error) {

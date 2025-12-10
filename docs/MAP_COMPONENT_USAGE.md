@@ -135,7 +135,7 @@ const locations = [
 
 ```vue
 <script setup lang="ts">
-import { useMapNavigation } from '@/composables/useMapNavigation';
+import { useMapNavigation } from '@/core/map';
 
 const { loading, mapApps, handleMapSelect } = useMapNavigation(
   30.660479,  // lat
@@ -179,11 +179,11 @@ A: 组件会自动显示 Toast 提示。可以通过修改 `openMapNavigation` �
 ## 技术实现
 
 - **组件**：`src/components/MapNavigationButton.vue`
-- **Hook**：`src/composables/useMapNavigation.ts`
+- **Hook**：`src/core/map/useMapNavigation.ts`
 - **后端**：`src-tauri/src/lib.rs` 中的 `open_map_navigation` 命令
 
 ## 相关文件
 
 - 后端实现：`src-tauri/src/lib.rs`
-- 类型定义：`src/types/tauri.d.ts`
-- 原始测试页面：`src/pages/test/MapTestPage.vue`
+- 类型定义：`src/core/map/types.ts`
+- 测试页面：`src/pages/test/MapTestPage.vue`

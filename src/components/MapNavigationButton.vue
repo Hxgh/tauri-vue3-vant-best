@@ -1,11 +1,7 @@
 <script setup lang="ts">
 import { ActionSheet } from 'vant';
 import { computed, ref } from 'vue';
-import {
-  checkMapInstalled,
-  getMapApps,
-  useMapNavigation,
-} from '@/composables/useMapNavigation';
+import { checkMapInstalled, getMapApps, useMapNavigation } from '@/core/map';
 
 interface Props {
   lat: number;

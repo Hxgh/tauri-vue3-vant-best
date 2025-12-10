@@ -140,10 +140,14 @@
 import { showToast } from 'vant';
 import { computed, ref } from 'vue';
 import AppTabbar from '@/components/AppTabbar.vue';
-import MainLayout from '@/layouts/MainLayout.vue';
-import { ContentStart, HeaderMode, TabbarMode } from '@/types/layout';
-import type { ThemeMode } from '../stores/theme';
-import { useThemeStore } from '../stores/theme';
+import {
+  ContentStart,
+  HeaderMode,
+  MainLayout,
+  TabbarMode,
+} from '@/core/layout';
+import type { ThemeMode } from '@/core/theme';
+import { useThemeStore } from '@/core/theme';
 
 const themeStore = useThemeStore();
 const showThemePicker = ref(false);

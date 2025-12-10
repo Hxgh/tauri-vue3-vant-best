@@ -1,17 +1,32 @@
-# Local
-.DS_Store
-*.local
-*.log*
-.env
+# Dependencies
+node_modules/
 
-# Dist
-node_modules
+# Build outputs
 dist/
+target/
 
-# Profile
-.rspack-profile-*/
+# Environment
+.env
+*.local
+
+# Logs
+*.log*
+
+# OS
+.DS_Store
+Thumbs.db
 
 # IDE
-.vscode/*
-!.vscode/extensions.json
-.idea
+.idea/
+*.swp
+*.swo
+
+# Rspack
+.rspack-profile-*/
+
+# Tauri
+src-tauri/target/
+src-tauri/gen/schemas/
+
+# Husky
+.husky/_/

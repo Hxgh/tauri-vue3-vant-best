@@ -87,8 +87,12 @@ import { showToast } from 'vant';
 import { ref } from 'vue';
 import ImmersiveBottomBar from '@/components/ImmersiveBottomBar.vue';
 import ImmersiveNavbar from '@/components/ImmersiveNavbar.vue';
-import MainLayout from '@/layouts/MainLayout.vue';
-import { ContentStart, HeaderMode, TabbarMode } from '@/types/layout';
+import {
+  ContentStart,
+  HeaderMode,
+  MainLayout,
+  TabbarMode,
+} from '@/core/layout';
 
 const progress = ref(30);
 const showInfo = ref(false);
