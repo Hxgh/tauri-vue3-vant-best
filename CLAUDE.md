@@ -226,7 +226,7 @@ Vant 组件通过 `unplugin-vue-components` 和 `VantResolver` 自动导入（�
 
 ## Android 构建流程
 
-`scripts/build-android.sh` 脚本处理开发和发布构建:
+`scripts/build-android.mjs` 跨平台脚本处理开发和发布构建（支持 Windows/macOS/Linux）:
 - **开发模式:** 使用 `devUrl` 指向本地开发服务器（支持热重载）
 - **发布模式:** 通过 `pnpm build` 打包前端，然后构建 APK
 

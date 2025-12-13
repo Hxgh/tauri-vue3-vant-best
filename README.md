@@ -83,6 +83,8 @@ pnpm build:android:dev     # Android 开发（需先启动 dev）
 pnpm build:android:prod    # Android 生产 APK
 ```
 
+**跨平台支持：** Android 构建脚本使用 Node.js 实现，支持 Windows/macOS/Linux。
+
 ## 升级核心模块
 
 ```bash
