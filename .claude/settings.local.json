@@ -12,7 +12,12 @@
       "Bash(find:*)",
       "Bash(grep:*)",
       "Bash(cat:*)",
-      "Bash(adb logcat:*)"
+      "Bash(adb logcat:*)",
+      "Bash(node --check:*)",
+      "Bash(adb devices:*)",
+      "Bash(powershell -Command \"echo \"\"ANDROID_HOME: $env:ANDROID_HOME\"\"; echo \"\"ANDROID_SDK_ROOT: $env:ANDROID_SDK_ROOT\"\"; adb devices\")",
+      "Bash(powershell -Command \"echo \"\"ANDROID_HOME: $env:ANDROID_HOME\"\"; echo \"\"ANDROID_SDK_ROOT: $env:ANDROID_SDK_ROOT\"\"; echo \"\"Path contains Android:\"\"; $env:Path -split '';'' | Select-String -Pattern ''Android''\")",
+      "Bash(node -e:*)"
     ],
     "deny": [],
     "ask": []
