@@ -1,4 +1,4 @@
-package com.tvvb.app
+package {{PACKAGE_NAME}}
 
 import android.content.res.Configuration
 import android.os.Build

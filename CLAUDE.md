@@ -55,6 +55,9 @@ src/
 │   ├── map/                 # 地图导航
 │   │   └── components/      # MapNavigationButton
 │   ├── notification/        # 通知
+│   ├── scripts/             # 构建脚本（跨平台）
+│   │   ├── build-android.mjs
+│   │   └── templates/       # MainActivity 模板
 │   └── index.ts             # 统一导出 + 版本号
 │
 ├── demo/                    # 📝 示例页面（业务项目删除）
@@ -226,9 +229,10 @@ Vant 组件通过 `unplugin-vue-components` 和 `VantResolver` 自动导入（�
 
 ## Android 构建流程
 
-`scripts/build-android.mjs` 跨平台脚本处理开发和发布构建（支持 Windows/macOS/Linux）:
+`src/core/scripts/build-android.mjs` 跨平台脚本处理开发和发布构建（支持 Windows/macOS/Linux）:
 - **开发模式:** 使用 `devUrl` 指向本地开发服务器（支持热重载）
 - **发布模式:** 通过 `pnpm build` 打包前端，然后构建 APK
+- **配置读取:** 包名从 `tauri.conf.json` 的 `identifier` 自动读取
 
 构建配置位于 `src-tauri/tauri.conf.json`:
 - `beforeBuildCommand`: pnpm build
@@ -239,6 +243,12 @@ Vant 组件通过 `unplugin-vue-components` 和 `VantResolver` 自动导入（�
 DEV_SERVER_HOST=192.168.3.81  # 开发服务器 IP
 DEV_SERVER_PORT=1234          # 开发服务器端口
 ```
+
+**脚本特性:**
+- 自动检测 Android SDK 路径
+- 自动切换 MainActivity 模板（开发/生产）
+- APK 自动签名和安装
+- 构建失败自动重试
 
 ## 常见模式
 

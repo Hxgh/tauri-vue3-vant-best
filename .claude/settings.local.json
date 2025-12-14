@@ -17,7 +17,9 @@
       "Bash(adb devices:*)",
       "Bash(powershell -Command \"echo \"\"ANDROID_HOME: $env:ANDROID_HOME\"\"; echo \"\"ANDROID_SDK_ROOT: $env:ANDROID_SDK_ROOT\"\"; adb devices\")",
       "Bash(powershell -Command \"echo \"\"ANDROID_HOME: $env:ANDROID_HOME\"\"; echo \"\"ANDROID_SDK_ROOT: $env:ANDROID_SDK_ROOT\"\"; echo \"\"Path contains Android:\"\"; $env:Path -split '';'' | Select-String -Pattern ''Android''\")",
-      "Bash(node -e:*)"
+      "Bash(node -e:*)",
+      "Bash(mkdir:*)",
+      "Bash(git add:*)"
     ],
     "deny": [],
     "ask": []

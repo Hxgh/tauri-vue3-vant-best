@@ -12,15 +12,22 @@
 | `scanner` | 扫码系统 | 跨平台扫码、商品查询 |
 | `map` | 地图导航 | 高德/百度/腾讯地图导航 |
 | `notification` | 通知系统 | 系统通知、权限管理 |
+| `scripts` | 构建脚本 | 跨平台 Android 构建 |
 
-## 迁移到其他项目
+## 快速迁移
 
-### 方式一：完整复制
+### 方式一：完整复制（推荐）
 
-1. 复制整个 `src/core/` 目录到目标项目的 `src/` 下
-2. 复制 `src-tauri/src/lib.rs` 中的地图相关命令（如果需要地图功能）
-3. 安装依赖（见下方）
-4. 引入样式和初始化
+```bash
+# 1. 复制整个 core 目录
+cp -r src/core/ your-project/src/core/
+
+# 2. 更新 package.json 脚本
+# "build:android:dev": "node src/core/scripts/build-android.mjs dev"
+# "build:android:prod": "node src/core/scripts/build-android.mjs release"
+
+# 3. 复制原生集成代码（见下方说明）
+```
 
 ### 方式二：按需复制
 
@@ -28,6 +35,7 @@
 - `scanner` 依赖 `platform`
 - `theme` 依赖 `platform`
 - `map` 依赖 `platform`（可选）
+- `scripts` 独立，无依赖
 
 ## 依赖安装
 
@@ -196,36 +204,161 @@ await send({
 });
 ```
 
-## 原生桥接（Android/iOS）
+## Android 构建脚本
 
-### 主题同步
+### 使用方法
 
-需要在原生层实现以下接口：
+```bash
+# 开发模式（热更新）
+pnpm build:android:dev
 
-**Android:**
-```kotlin
-// 注入 window.AndroidTheme
-webView.addJavascriptInterface(object {
-    @JavascriptInterface
-    fun setTheme(theme: String, mode: String) {
-        // 更新状态栏和导航栏颜色
-    }
-}, "AndroidTheme")
-
-// 注入系统主题
-webView.evaluateJavascript("window.__ANDROID_SYSTEM_THEME__ = '${systemTheme}'", null)
+# 生产模式（硬打包）
+pnpm build:android:prod
 ```
 
-**iOS:**
-参考 `src-tauri/gen/apple/Sources/app/NativeBridge.mm`
+### 配置说明
 
-### 地图命令
+脚本自动从以下位置读取配置：
 
-需要在 `src-tauri/src/lib.rs` 实现：
-- `open_map_navigation`: 打开地图导航
-- `check_map_installed`: 检查地图是否安装
+| 配置项 | 来源 | 说明 |
+|--------|------|------|
+| 包名 | `src-tauri/tauri.conf.json` → `identifier` | Android 应用包名 |
+| 应用名 | `src-tauri/tauri.conf.json` → `productName` | 应用显示名称 |
+| 开发服务器 | `.env` → `DEV_SERVER_HOST` / `DEV_SERVER_PORT` | 热更新服务器地址 |
 
-参考本项目的实现。
+### .env 配置示例
+
+```bash
+# 开发服务器配置
+DEV_SERVER_HOST=192.168.1.100
+DEV_SERVER_PORT=1234
+```
+
+### 脚本功能
+
+- ✅ 跨平台支持 (Windows/macOS/Linux)
+- ✅ 自动检测 Android SDK
+- ✅ 自动清理 Gradle 缓存
+- ✅ MainActivity 模板切换（开发/生产）
+- ✅ APK 自动签名和安装
+- ✅ 构建失败自动重试
+
+## 原生集成
+
+### 1. Rust 地图命令
+
+复制以下代码到 `src-tauri/src/lib.rs`：
+
+```rust
+#[derive(Debug, serde::Serialize)]
+struct MapResult {
+    success: bool,
+    message: String,
+}
+
+#[tauri::command]
+async fn open_map_navigation(
+    app: tauri::AppHandle,
+    lat: f64,
+    lng: f64,
+    name: String,
+    app_type: String,
+) -> Result<MapResult, String> {
+    #[cfg(target_os = "android")]
+    {
+        use tauri_plugin_opener::OpenerExt;
+
+        let scheme_url = match app_type.as_str() {
+            "amap" => format!("androidamap://navi?sourceApplication=app&lat={}&lon={}&dev=0&style=2", lat, lng),
+            "baidu" => format!("baidumap://map/direction?destination=latlng:{},{}|name:{}&coord_type=bd09ll&mode=driving", lat, lng, name),
+            "tencent" => format!("qqmap://map/routeplan?type=drive&to={}&tocoord={},{}", name, lat, lng),
+            _ => return Err("不支持的地图类型".to_string()),
+        };
+
+        match app.opener().open_url(scheme_url, None::<&str>) {
+            Ok(_) => Ok(MapResult { success: true, message: "已唤起地图应用".to_string() }),
+            Err(_) => {
+                // fallback 到网页版
+                let web_url = match app_type.as_str() {
+                    "amap" => format!("https://uri.amap.com/navigation?to={},{},{}", lng, lat, name),
+                    "baidu" => format!("https://api.map.baidu.com/marker?location={},{}&title={}&output=html", lat, lng, name),
+                    "tencent" => format!("https://apis.map.qq.com/uri/v1/routeplan?type=drive&to={}&tocoord={},{}", name, lat, lng),
+                    _ => return Err("不支持的地图类型".to_string()),
+                };
+                match app.opener().open_url(web_url, None::<&str>) {
+                    Ok(_) => Ok(MapResult { success: false, message: "已打开网页版".to_string() }),
+                    Err(e) => Err(format!("打开地图失败: {}", e)),
+                }
+            }
+        }
+    }
+
+    #[cfg(not(target_os = "android"))]
+    {
+        // 桌面端直接打开网页版
+        use tauri_plugin_opener::OpenerExt;
+        let web_url = match app_type.as_str() {
+            "amap" => format!("https://uri.amap.com/navigation?to={},{},{}", lng, lat, name),
+            _ => return Err("不支持的地图类型".to_string()),
+        };
+        match app.opener().open_url(web_url, None::<&str>) {
+            Ok(_) => Ok(MapResult { success: true, message: "已打开地图".to_string() }),
+            Err(e) => Err(format!("打开地图失败: {}", e)),
+        }
+    }
+}
+
+// 在 run() 中注册命令
+.invoke_handler(tauri::generate_handler![open_map_navigation])
+```
+
+### 2. Android gradle.properties
+
+在 `src-tauri/gen/android/gradle.properties` 添加：
+
+```properties
+# 修复 Windows 跨驱动器编译问题
+kotlin.incremental=false
+```
+
+### 3. index.html 防闪屏
+
+在 `index.html` 的 `<head>` 中添加：
+
+```html
+<!-- 首屏样式：定义主题颜色，防止闪白屏 -->
+<style>
+  :root {
+    --first-screen-bg-light: #f7f8fa;
+    --first-screen-bg-dark: #141414;
+  }
+  html { transition: none !important; }
+  html.light { background-color: var(--first-screen-bg-light); }
+  html.dark { background-color: var(--first-screen-bg-dark); }
+</style>
+
+<!-- 防止深色模式闪白屏：在页面渲染前立即应用主题 -->
+<script>
+  (function() {
+    const storedMode = localStorage.getItem('app-theme-mode') || 'auto';
+    let theme = storedMode;
+    if (storedMode === 'auto') {
+      theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    }
+    document.documentElement.classList.add(theme);
+    document.documentElement.setAttribute('data-theme', theme);
+  })();
+</script>
+```
+
+### 4. MainActivity 模板
+
+构建脚本会自动使用 `scripts/templates/MainActivity/` 中的模板。模板包含：
+
+- **ThemeBridge**: Web ↔ Android 主题同步
+- **MapBridge**: 检查地图应用是否安装
+- **键盘监听**: 通过 CSS 变量 `--skb` 暴露键盘高度
+- **Edge-to-Edge**: 沉浸式状态栏和导航栏
 
 ## 目录结构
 
@@ -238,23 +371,24 @@ src/core/
 │   └── logger.ts       # 日志工具
 │
 ├── theme/              # 主题系统
-│   ├── index.ts        # 导出入口
+│   ├── index.ts
 │   ├── store.ts        # Pinia Store
-│   ├── types.ts        # 类型定义
+│   ├── types.ts
 │   └── styles/
 │       └── theme.css   # 主题 CSS 变量
 │
 ├── layout/             # 布局系统
-│   ├── index.ts        # 导出入口
+│   ├── index.ts
 │   ├── types.ts        # 枚举和预设
 │   ├── MainLayout.vue  # 核心组件
+│   ├── components/     # 子组件
 │   └── styles/
 │       └── safe-area.css
 │
 ├── scanner/            # 扫码系统
-│   ├── index.ts        # 导出入口
-│   ├── types.ts        # 类型定义
-│   ├── utils.ts        # 工具函数
+│   ├── index.ts
+│   ├── types.ts
+│   ├── utils.ts
 │   ├── useQRScanner.ts
 │   ├── useBarcodeScanner.ts
 │   └── useProductQuery.ts
@@ -262,13 +396,29 @@ src/core/
 ├── map/                # 地图导航
 │   ├── index.ts
 │   ├── types.ts
-│   └── useMapNavigation.ts
+│   ├── useMapNavigation.ts
+│   └── components/
+│       └── MapNavigationButton.vue
 │
 ├── notification/       # 通知系统
 │   ├── index.ts
 │   ├── types.ts
 │   └── useNotification.ts
 │
+├── scripts/            # 构建脚本
+│   ├── build-android.mjs
+│   └── templates/
+│       └── MainActivity/
+│           ├── dev.kt
+│           └── release.kt
+│
 ├── index.ts            # 统一导出入口
 └── README.md           # 本文档
+```
+
+## 版本信息
+
+```ts
+import { CORE_VERSION } from '@/core';
+console.log('Core version:', CORE_VERSION); // 1.0.0
 ```

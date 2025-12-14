@@ -11,8 +11,8 @@
     "lint": "biome check",
     "type-check": "vue-tsc --noEmit",
     "preview": "rsbuild preview",
-    "build:android:dev": "node scripts/build-android.mjs dev",
-    "build:android:prod": "node scripts/build-android.mjs release",
+    "build:android:dev": "node src/core/scripts/build-android.mjs dev",
+    "build:android:prod": "node src/core/scripts/build-android.mjs release",
     "install:android": "adb install -r src-tauri/gen/android/app/build/outputs/apk/universal/release/app-universal-release-unsigned.apk"
   },
   "dependencies": {
