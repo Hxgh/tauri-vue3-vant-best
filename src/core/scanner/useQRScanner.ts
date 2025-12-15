@@ -12,7 +12,9 @@ import type { Html5QrcodeResult } from 'html5-qrcode';
 import { Html5Qrcode, Html5QrcodeScannerState } from 'html5-qrcode';
 import { closeToast, showLoadingToast, showToast } from 'vant';
 import { onUnmounted, ref } from 'vue';
+import { AUDIO, SCANNER } from '../constants';
 import { isTauriMobile } from '../platform/detect';
+import { logger } from '../platform/logger';
 import type { ScanError, ScanOptions, ScanResult } from './types';
 import { BarcodeFormat } from './types';
 import {
@@ -54,11 +56,11 @@ export function useQRScanner(options: ScanOptions = {}, elementId?: string) {
         await tauriVibrate();
       } catch {
         if ('vibrate' in navigator) {
-          navigator.vibrate(200);
+          navigator.vibrate(SCANNER.VIBRATE_DURATION);
         }
       }
     } else if ('vibrate' in navigator) {
-      navigator.vibrate(200);
+      navigator.vibrate(SCANNER.VIBRATE_DURATION);
     }
   };
 
@@ -69,27 +71,32 @@ export function useQRScanner(options: ScanOptions = {}, elementId?: string) {
     if (!sound) return;
 
     try {
-      const audioContext = new (
-        window.AudioContext || (window as any).webkitAudioContext
-      )();
+      const AudioContextClass =
+        window.AudioContext || window.webkitAudioContext;
+      if (!AudioContextClass) {
+        logger.debug('[Scanner] AudioContext not available');
+        return;
+      }
+
+      const audioContext = new AudioContextClass();
       const oscillator = audioContext.createOscillator();
       const gainNode = audioContext.createGain();
 
       oscillator.connect(gainNode);
       gainNode.connect(audioContext.destination);
 
-      oscillator.frequency.value = 1800;
+      oscillator.frequency.value = AUDIO.SCAN_SOUND_FREQUENCY;
       oscillator.type = 'sine';
-      gainNode.gain.value = 0.3;
+      gainNode.gain.value = AUDIO.SCAN_SOUND_VOLUME;
 
       oscillator.start(audioContext.currentTime);
-      oscillator.stop(audioContext.currentTime + 0.1);
+      oscillator.stop(audioContext.currentTime + AUDIO.SCAN_SOUND_DURATION);
 
       oscillator.onended = () => {
         audioContext.close();
       };
-    } catch {
-      // 声音播放失败，静默处理
+    } catch (error) {
+      logger.debug('[Scanner] Failed to play scan sound:', error);
     }
   };
 
@@ -156,10 +163,9 @@ export function useQRScanner(options: ScanOptions = {}, elementId?: string) {
         if (typeof scanResult.format === 'string') {
           rawFormat = scanResult.format;
         } else if (typeof scanResult.format === 'object') {
-          rawFormat =
-            (scanResult.format as any).name ||
-            (scanResult.format as any).toString() ||
-            'UNKNOWN';
+          // 处理对象类型的 format（Tauri 插件可能返回对象）
+          const formatObj = scanResult.format as { name?: string };
+          rawFormat = formatObj.name || String(scanResult.format) || 'UNKNOWN';
         } else {
           rawFormat = String(scanResult.format);
         }
@@ -188,10 +194,12 @@ export function useQRScanner(options: ScanOptions = {}, elementId?: string) {
 
       onSuccess?.(resultData);
       return resultData;
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
       if (
-        error?.message?.includes('cancelled') ||
-        error?.message?.includes('canceled')
+        errorMessage.includes('cancelled') ||
+        errorMessage.includes('canceled')
       ) {
         const cancelError: ScanError = {
           name: 'ScanError',
@@ -204,7 +212,7 @@ export function useQRScanner(options: ScanOptions = {}, elementId?: string) {
 
       const scanError: ScanError = {
         name: 'ScanError',
-        message: error?.message || '扫描失败',
+        message: errorMessage || '扫描失败',
         code: 'SCAN_ERROR',
       };
       showToast({ message: '扫描失败', icon: 'fail' });
@@ -273,10 +281,10 @@ export function useQRScanner(options: ScanOptions = {}, elementId?: string) {
         };
 
         const config = {
-          fps: 10,
+          fps: SCANNER.DEFAULT_FPS,
           qrbox: (viewfinderWidth: number, viewfinderHeight: number) => {
             const minDimension = Math.min(viewfinderWidth, viewfinderHeight);
-            const qrboxSize = Math.floor(minDimension * 0.7);
+            const qrboxSize = Math.floor(minDimension * SCANNER.SCAN_BOX_RATIO);
             return { width: qrboxSize, height: qrboxSize };
           },
           aspectRatio: 1.0,
@@ -369,7 +377,6 @@ export function useQRScanner(options: ScanOptions = {}, elementId?: string) {
       try {
         const videoTrack = currentStream.getVideoTracks()[0];
         await videoTrack.applyConstraints({
-          // @ts-expect-error
           advanced: [{ torch: false }],
         });
       } catch {
@@ -418,7 +425,6 @@ export function useQRScanner(options: ScanOptions = {}, elementId?: string) {
       const newTorchState = !torchOn.value;
 
       await videoTrack.applyConstraints({
-        // @ts-expect-error
         advanced: [{ torch: newTorchState }],
       });
 
@@ -496,7 +502,7 @@ export function useQRScanner(options: ScanOptions = {}, elementId?: string) {
       throw new Error('无效的文件类型');
     }
 
-    if (imageFile.size > 10 * 1024 * 1024) {
+    if (imageFile.size > SCANNER.MAX_IMAGE_SIZE) {
       showToast({ message: '图片大小不能超过 10MB', icon: 'fail' });
       throw new Error('文件过大');
     }

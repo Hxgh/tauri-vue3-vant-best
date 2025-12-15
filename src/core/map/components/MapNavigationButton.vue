@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { ActionSheet } from 'vant';
 import { computed, ref } from 'vue';
 import { checkMapInstalled, getMapApps, useMapNavigation } from '@/core/map';
 
@@ -32,19 +31,25 @@ const actions = computed(() =>
   })),
 );
 
-// 点击时检查已安装的地图应用
+// 点击时并行检查已安装的地图应用
+// biome-ignore lint/correctness/noUnusedVariables: used in template
 const handleClick = async () => {
   if (isChecking.value) return;
 
   isChecking.value = true;
   try {
+    // 并行检查所有地图应用
+    const results = await Promise.all(
+      mapApps.map((app) => checkMapInstalled(app.value)),
+    );
+
     const installed = new Set<string>();
-    for (const app of mapApps) {
-      const isInstalled = await checkMapInstalled(app.value);
+    results.forEach((isInstalled, index) => {
       if (isInstalled) {
-        installed.add(app.value);
+        installed.add(mapApps[index].value);
       }
-    }
+    });
+
     installedMaps.value = installed;
     showActionSheet.value = true;
   } finally {
@@ -67,7 +72,7 @@ const handleSelect = async (action: {
     <slot />
   </div>
 
-  <ActionSheet
+  <van-action-sheet
     v-model:show="showActionSheet"
     :actions="actions"
     cancel-text="取消"

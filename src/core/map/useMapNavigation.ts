@@ -8,6 +8,7 @@
 import { invoke } from '@tauri-apps/api/core';
 import { closeToast, showLoadingToast, showToast } from 'vant';
 import { computed, ref } from 'vue';
+import { logger } from '../platform/logger';
 import type { MapApp, MapResult, MapType } from './types';
 
 /**
@@ -56,7 +57,7 @@ export async function checkMapInstalled(mapType: MapType): Promise<boolean> {
 
     return result.installed;
   } catch (error) {
-    console.error('[MapCheck] Failed to check map installation:', error);
+    logger.error('[MapCheck] Failed to check map installation:', error);
     return false;
   }
 }

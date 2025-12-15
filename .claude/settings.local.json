@@ -47,7 +47,14 @@
       "Bash(adb devices:*)",
       "Bash(adb shell:*)",
       "Bash(adb forward:*)",
-      "Bash(pnpm build:android:prod-devapi:*)"
+      "Bash(pnpm build:android:prod-devapi:*)",
+      "Bash(tree:*)",
+      "Bash(cd:*)",
+      "Bash(npm install:*)",
+      "Bash(pnpm install:*)",
+      "Bash(pnpm test:run:*)",
+      "Bash(pnpm run type-check:*)",
+      "Bash(pnpm run lint)"
     ],
     "deny": [],
     "ask": []

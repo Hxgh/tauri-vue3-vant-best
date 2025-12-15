@@ -13,10 +13,12 @@ import {
   sendNotification,
 } from '@tauri-apps/plugin-notification';
 import { ref } from 'vue';
+import { NOTIFICATION } from '../constants';
+import { logger } from '../platform/logger';
 import type { NotificationChannel, NotificationOptions } from './types';
 
 /** 默认高优先级渠道ID */
-const DEFAULT_CHANNEL_ID = 'high_priority_channel';
+const DEFAULT_CHANNEL_ID = NOTIFICATION.DEFAULT_CHANNEL_ID;
 
 /** 渠道是否已创建 */
 let channelCreated = false;
@@ -59,7 +61,7 @@ export function useNotification() {
       permissionGranted.value = granted;
       return granted;
     } catch (error) {
-      console.error('检查通知权限失败:', error);
+      logger.error('[Notification] 检查通知权限失败:', error);
       return false;
     }
   }
@@ -83,7 +85,7 @@ export function useNotification() {
       permissionGranted.value = granted;
       return granted;
     } catch (error) {
-      console.error('请求通知权限失败:', error);
+      logger.error('[Notification] 请求通知权限失败:', error);
       return false;
     } finally {
       loading.value = false;
@@ -118,7 +120,7 @@ export function useNotification() {
         sound: channel.sound,
       });
     } catch (error) {
-      console.error('创建通知渠道失败:', error);
+      logger.error('[Notification] 创建通知渠道失败:', error);
       throw error;
     }
   }
@@ -132,8 +134,8 @@ export function useNotification() {
     try {
       await createChannel({
         id: DEFAULT_CHANNEL_ID,
-        name: '重要通知',
-        description: '会在前台弹出的重要通知',
+        name: NOTIFICATION.DEFAULT_CHANNEL_NAME,
+        description: NOTIFICATION.DEFAULT_CHANNEL_DESCRIPTION,
         importance: Importance.High,
         vibration: true,
       });
@@ -178,7 +180,7 @@ export function useNotification() {
         });
       }
     } catch (error) {
-      console.error('发送通知失败:', error);
+      logger.error('[Notification] 发送通知失败:', error);
       throw error;
     } finally {
       loading.value = false;

@@ -31,24 +31,4 @@ export interface AndroidThemeBridge {
   setTheme(theme: ResolvedTheme, mode: ThemeMode): void;
 }
 
-/**
- * 扩展 Window 接口以包含原生注入的主题
- */
-declare global {
-  interface Window {
-    /** Android 注入的系统主题 */
-    __ANDROID_SYSTEM_THEME__?: ResolvedTheme;
-    /** iOS 注入的系统主题 */
-    __IOS_SYSTEM_THEME__?: ResolvedTheme;
-    /** 强制主题检查回调（由原生调用） */
-    __FORCE_THEME_CHECK__?: () => void;
-    /** Android 主题桥接 */
-    AndroidTheme?: AndroidThemeBridge;
-    /** iOS WebKit 桥接 */
-    webkit?: {
-      messageHandlers?: {
-        iOSTheme?: iOSThemeBridge;
-      };
-    };
-  }
-}
+// Note: Window interface extensions are defined in src/env.d.ts

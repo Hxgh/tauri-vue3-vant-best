@@ -25,3 +25,9 @@ export {
   isTauriMobile,
 } from './detect';
 export { logger } from './logger';
+export {
+  createStorage,
+  safeGetItem,
+  safeRemoveItem,
+  safeSetItem,
+} from './storage';

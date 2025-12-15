@@ -9,7 +9,8 @@
  * @module core/scanner/useBarcodeScanner
  */
 
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
+import { SCANNER } from '../constants';
 import type {
   BarcodeScannerOptions,
   BarcodeScanResult,
@@ -114,7 +115,7 @@ export function useBarcodeScanner(
 
   // 扫描历史
   const scanHistory = ref<BarcodeScanResult[]>([]);
-  const maxHistoryLength = 20;
+  const maxHistoryLength = SCANNER.MAX_HISTORY_LENGTH;
 
   /**
    * 添加到历史
@@ -140,17 +141,27 @@ export function useBarcodeScanner(
     clearProduct();
     await scanner.startScan();
 
-    // 等待商品查询完成
+    // 使用 watch 等待商品查询完成，替代轮询
     return new Promise((resolve) => {
-      const checkComplete = () => {
-        if (lastResult.value?.productQueryDone) {
-          addToHistory(lastResult.value);
-          resolve(lastResult.value);
-        } else {
-          setTimeout(checkComplete, 50);
-        }
-      };
-      checkComplete();
+      // 如果已经完成，直接返回
+      if (lastResult.value?.productQueryDone) {
+        addToHistory(lastResult.value);
+        resolve(lastResult.value);
+        return;
+      }
+
+      // 监听 productQueryDone 变化
+      const unwatch = watch(
+        () => lastResult.value?.productQueryDone,
+        (done) => {
+          if (done && lastResult.value) {
+            unwatch();
+            addToHistory(lastResult.value);
+            resolve(lastResult.value);
+          }
+        },
+        { immediate: true },
+      );
     });
   };
 
@@ -161,17 +172,27 @@ export function useBarcodeScanner(
     clearProduct();
     await scanner.scanFromImage(file);
 
-    // 等待商品查询完成
+    // 使用 watch 等待商品查询完成，替代轮询
     return new Promise((resolve) => {
-      const checkComplete = () => {
-        if (lastResult.value?.productQueryDone) {
-          addToHistory(lastResult.value);
-          resolve(lastResult.value);
-        } else {
-          setTimeout(checkComplete, 50);
-        }
-      };
-      checkComplete();
+      // 如果已经完成，直接返回
+      if (lastResult.value?.productQueryDone) {
+        addToHistory(lastResult.value);
+        resolve(lastResult.value);
+        return;
+      }
+
+      // 监听 productQueryDone 变化
+      const unwatch = watch(
+        () => lastResult.value?.productQueryDone,
+        (done) => {
+          if (done && lastResult.value) {
+            unwatch();
+            addToHistory(lastResult.value);
+            resolve(lastResult.value);
+          }
+        },
+        { immediate: true },
+      );
     });
   };
 

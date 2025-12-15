@@ -12,6 +12,7 @@
  * - 平台检测：isTauriEnv, isAndroid, isIOS, isMobile
  * - 原生桥接：callBridge, withFallback
  * - 日志工具：logger
+ * - 安全存储：safeGetItem, safeSetItem, createStorage
  *
  * ### 2. 主题系统 (theme)
  * - 三种模式：light, dark, auto
@@ -63,6 +64,16 @@
  * ```
  */
 
+// ============ Constants 常量 ============
+export {
+  AUDIO,
+  LAYOUT,
+  NOTIFICATION,
+  PRODUCT_QUERY,
+  SCANNER,
+  THEME,
+} from './constants';
+
 export type { LayoutConfig } from './layout';
 // ============ Layout 布局系统 ============
 export {
@@ -96,12 +107,16 @@ export type { BridgeResult } from './platform';
 // ============ Platform 平台工具 ============
 export {
   callBridge,
+  createStorage,
   isAndroid,
   isIOS,
   isMobile,
   isTauriEnv,
   isTauriMobile,
   logger,
+  safeGetItem,
+  safeRemoveItem,
+  safeSetItem,
   withFallback,
 } from './platform';
 export type {

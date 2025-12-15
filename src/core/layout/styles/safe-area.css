@@ -10,10 +10,11 @@
  * - --sab: 底部安全区域（Home Indicator）
  * - --sal / --sar: 左右安全区域（横屏时使用）
  * - --skb: 键盘高度（由原生层注入）
+ *
+ * 注意：constant() 是 iOS 11.0-11.2 的兼容写法，env() 是标准写法
+ * 重复定义同名 CSS 变量是为了渐进增强，浏览器会使用最后一个有效值
  */
 
-/* biome-ignore lint/correctness/noUnknownFunction: constant() is for iOS 11.0-11.2 compatibility */
-/* biome-ignore lint/suspicious/noDuplicateCustomProperties: Progressive enhancement for older iOS */
 :root {
   /* 安全区域变量（兼容 iOS 11.0-11.2 的 constant() 和标准 env()） */
   --sat: constant(safe-area-inset-top, 0px);

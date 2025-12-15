@@ -13,7 +13,7 @@
  * @version 1.0.0
  */
 
-import { execSync } from "node:child_process";
+import { execSync } from 'node:child_process';
 import {
   copyFileSync,
   existsSync,
@@ -23,22 +23,22 @@ import {
   statSync,
   unlinkSync,
   writeFileSync,
-} from "node:fs";
-import { platform } from "node:os";
-import { dirname, join, resolve } from "node:path";
-import { fileURLToPath } from "node:url";
+} from 'node:fs';
+import { platform } from 'node:os';
+import { dirname, join, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 // ESM 下获取 __dirname
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 // 路径配置（相对于 src/core/scripts/）
-const CORE_DIR = resolve(__dirname, "..");
-const PROJECT_ROOT = resolve(CORE_DIR, "..", "..");
-const ANDROID_DIR = join(PROJECT_ROOT, "src-tauri", "gen", "android");
-const TEMPLATES_DIR = join(__dirname, "templates", "MainActivity");
+const CORE_DIR = resolve(__dirname, '..');
+const PROJECT_ROOT = resolve(CORE_DIR, '..', '..');
+const ANDROID_DIR = join(PROJECT_ROOT, 'src-tauri', 'gen', 'android');
+const TEMPLATES_DIR = join(__dirname, 'templates', 'MainActivity');
 
-const isWindows = platform() === "win32";
+const isWindows = platform() === 'win32';
 
 // ============================================================================
 // 配置读取
@@ -48,14 +48,14 @@ const isWindows = platform() === "win32";
  * 从 tauri.conf.json 读取项目配置
  */
 function loadTauriConfig() {
-  const confPath = join(PROJECT_ROOT, "src-tauri", "tauri.conf.json");
+  const confPath = join(PROJECT_ROOT, 'src-tauri', 'tauri.conf.json');
   if (!existsSync(confPath)) {
-    error("未找到 src-tauri/tauri.conf.json");
+    error('未找到 src-tauri/tauri.conf.json');
     process.exit(1);
   }
 
   try {
-    const content = readFileSync(confPath, "utf-8");
+    const content = readFileSync(confPath, 'utf-8');
     return JSON.parse(content);
   } catch (e) {
     error(`解析 tauri.conf.json 失败: ${e.message}`);
@@ -67,16 +67,16 @@ function loadTauriConfig() {
  * 加载 .env 文件
  */
 function loadEnv() {
-  const envPath = join(PROJECT_ROOT, ".env");
+  const envPath = join(PROJECT_ROOT, '.env');
   const env = {};
   if (existsSync(envPath)) {
-    const content = readFileSync(envPath, "utf-8");
-    for (const line of content.split("\n")) {
+    const content = readFileSync(envPath, 'utf-8');
+    for (const line of content.split('\n')) {
       const trimmed = line.trim();
-      if (trimmed && !trimmed.startsWith("#")) {
-        const [key, ...valueParts] = trimmed.split("=");
+      if (trimmed && !trimmed.startsWith('#')) {
+        const [key, ...valueParts] = trimmed.split('=');
         if (key) {
-          env[key.trim()] = valueParts.join("=").trim();
+          env[key.trim()] = valueParts.join('=').trim();
         }
       }
     }
@@ -105,33 +105,33 @@ const error = (msg) => console.log(colors.red(`❌ ${msg}`));
 function exec(cmd, options = {}) {
   try {
     return execSync(cmd, {
-      encoding: "utf-8",
-      stdio: options.silent ? "pipe" : "inherit",
+      encoding: 'utf-8',
+      stdio: options.silent ? 'pipe' : 'inherit',
       cwd: options.cwd || PROJECT_ROOT,
       shell: true,
       ...options,
     });
   } catch (e) {
-    if (options.ignoreError) return "";
+    if (options.ignoreError) return '';
     throw e;
   }
 }
 
 // 静默执行命令
 function execSilent(cmd, options = {}) {
-  return exec(cmd, { ...options, silent: true, stdio: "pipe" });
+  return exec(cmd, { ...options, silent: true, stdio: 'pipe' });
 }
 
 // 自动检测并设置 Android SDK 路径
 function setupAndroidSDK() {
-  let sdkPath = process.env.ANDROID_HOME || process.env.ANDROID_SDK_ROOT;
+  const sdkPath = process.env.ANDROID_HOME || process.env.ANDROID_SDK_ROOT;
 
   // 如果已经设置，确保 platform-tools 在 PATH 中
   if (sdkPath) {
     info(`Android SDK 已配置: ${sdkPath}`);
-    const platformTools = join(sdkPath, "platform-tools");
+    const platformTools = join(sdkPath, 'platform-tools');
     if (!process.env.PATH.includes(platformTools)) {
-      process.env.PATH = `${platformTools}${isWindows ? ";" : ":"}${process.env.PATH}`;
+      process.env.PATH = `${platformTools}${isWindows ? ';' : ':'}${process.env.PATH}`;
       info(`已添加 platform-tools 到 PATH`);
     }
     return;
@@ -140,35 +140,43 @@ function setupAndroidSDK() {
   // 常见 Android SDK 位置
   const commonPaths = isWindows
     ? [
-        "E:/SDK",
-        "D:/SDK",
-        "D:/Program Files/Android/SDK",
-        "C:/Users/" + (process.env.USERNAME || "") + "/AppData/Local/Android/Sdk",
-        join(process.env.LOCALAPPDATA || "", "Android", "Sdk"),
-        join(process.env.USERPROFILE || "", "AppData", "Local", "Android", "Sdk"),
+        'E:/SDK',
+        'D:/SDK',
+        'D:/Program Files/Android/SDK',
+        'C:/Users/' +
+          (process.env.USERNAME || '') +
+          '/AppData/Local/Android/Sdk',
+        join(process.env.LOCALAPPDATA || '', 'Android', 'Sdk'),
+        join(
+          process.env.USERPROFILE || '',
+          'AppData',
+          'Local',
+          'Android',
+          'Sdk',
+        ),
       ]
     : [
-        join(process.env.HOME || "", "Android", "Sdk"),
-        join(process.env.HOME || "", "Library", "Android", "sdk"),
-        "/usr/local/android-sdk",
+        join(process.env.HOME || '', 'Android', 'Sdk'),
+        join(process.env.HOME || '', 'Library', 'Android', 'sdk'),
+        '/usr/local/android-sdk',
       ];
 
   for (const path of commonPaths) {
     if (existsSync(path)) {
-      const platformTools = join(path, "platform-tools");
-      const adbPath = join(platformTools, isWindows ? "adb.exe" : "adb");
+      const platformTools = join(path, 'platform-tools');
+      const adbPath = join(platformTools, isWindows ? 'adb.exe' : 'adb');
 
       if (existsSync(adbPath)) {
         info(`自动检测到 Android SDK: ${path}`);
         process.env.ANDROID_HOME = path;
         process.env.ANDROID_SDK_ROOT = path;
-        process.env.PATH = `${platformTools}${isWindows ? ";" : ":"}${process.env.PATH}`;
+        process.env.PATH = `${platformTools}${isWindows ? ';' : ':'}${process.env.PATH}`;
         return;
       }
     }
   }
 
-  warn("未找到 Android SDK，请设置 ANDROID_HOME 环境变量");
+  warn('未找到 Android SDK，请设置 ANDROID_HOME 环境变量');
 }
 
 // 递归删除目录（跨平台）
@@ -187,11 +195,20 @@ function rmDir(dirPath) {
 // 终止 Gradle 进程（跨平台）
 function killGradleProcesses() {
   if (isWindows) {
-    exec('taskkill /F /IM java.exe /FI "WINDOWTITLE eq *gradle*" 2>nul', { ignoreError: true, silent: true });
-    exec("taskkill /F /IM gradle.exe 2>nul", { ignoreError: true, silent: true });
+    exec('taskkill /F /IM java.exe /FI "WINDOWTITLE eq *gradle*" 2>nul', {
+      ignoreError: true,
+      silent: true,
+    });
+    exec('taskkill /F /IM gradle.exe 2>nul', {
+      ignoreError: true,
+      silent: true,
+    });
   } else {
-    exec("pkill -9 -f gradle 2>/dev/null", { ignoreError: true, silent: true });
-    exec("pkill -9 -f GradleDaemon 2>/dev/null", { ignoreError: true, silent: true });
+    exec('pkill -9 -f gradle 2>/dev/null', { ignoreError: true, silent: true });
+    exec('pkill -9 -f GradleDaemon 2>/dev/null', {
+      ignoreError: true,
+      silent: true,
+    });
   }
 }
 
@@ -212,30 +229,30 @@ async function checkUrl(url) {
 function findApksigner() {
   const androidHome = process.env.ANDROID_HOME || process.env.ANDROID_SDK_ROOT;
   if (!androidHome) {
-    error("未设置 ANDROID_HOME 或 ANDROID_SDK_ROOT 环境变量");
+    error('未设置 ANDROID_HOME 或 ANDROID_SDK_ROOT 环境变量');
     process.exit(1);
   }
 
-  const buildToolsDir = join(androidHome, "build-tools");
+  const buildToolsDir = join(androidHome, 'build-tools');
   if (!existsSync(buildToolsDir)) {
-    error("未找到 build-tools 目录");
+    error('未找到 build-tools 目录');
     process.exit(1);
   }
 
   const versions = readdirSync(buildToolsDir)
     .filter((v) => /^\d+\.\d+\.\d+$/.test(v))
     .sort((a, b) => {
-      const [a1, a2, a3] = a.split(".").map(Number);
-      const [b1, b2, b3] = b.split(".").map(Number);
+      const [a1, a2, a3] = a.split('.').map(Number);
+      const [b1, b2, b3] = b.split('.').map(Number);
       return b1 - a1 || b2 - a2 || b3 - a3;
     });
 
   if (versions.length === 0) {
-    error("未找到任何 build-tools 版本");
+    error('未找到任何 build-tools 版本');
     process.exit(1);
   }
 
-  const apksignerName = isWindows ? "apksigner.bat" : "apksigner";
+  const apksignerName = isWindows ? 'apksigner.bat' : 'apksigner';
   return join(buildToolsDir, versions[0], apksignerName);
 }
 
@@ -253,15 +270,23 @@ function prepareMainActivity(mode, config) {
   }
 
   // 读取模板
-  let content = readFileSync(templatePath, "utf-8");
+  let content = readFileSync(templatePath, 'utf-8');
 
   // 替换占位符
   content = content.replace(/\{\{PACKAGE_NAME\}\}/g, config.packageName);
   content = content.replace(/\{\{DEV_URL\}\}/g, config.devUrl);
 
   // 计算目标路径
-  const packagePath = config.packageName.replace(/\./g, "/");
-  const mainActivityPath = join(ANDROID_DIR, "app", "src", "main", "java", packagePath, "MainActivity.kt");
+  const packagePath = config.packageName.replace(/\./g, '/');
+  const mainActivityPath = join(
+    ANDROID_DIR,
+    'app',
+    'src',
+    'main',
+    'java',
+    packagePath,
+    'MainActivity.kt',
+  );
 
   return { content, mainActivityPath, templatePath };
 }
@@ -275,11 +300,11 @@ async function main() {
   setupAndroidSDK();
 
   const args = process.argv.slice(2);
-  const buildMode = args[0] || "dev";
+  const buildMode = args[0] || 'dev';
 
-  if (!["dev", "release"].includes(buildMode)) {
+  if (!['dev', 'release'].includes(buildMode)) {
     error(`无效的构建模式: ${buildMode}`);
-    console.log("用法: node src/core/scripts/build-android.mjs [dev|release]");
+    console.log('用法: node src/core/scripts/build-android.mjs [dev|release]');
     process.exit(1);
   }
 
@@ -288,47 +313,48 @@ async function main() {
   const env = loadEnv();
 
   const config = {
-    packageName: tauriConfig.identifier || "com.example.app",
-    productName: tauriConfig.productName || "App",
-    devUrl: `http://${env.DEV_SERVER_HOST || "192.168.1.1"}:${env.DEV_SERVER_PORT || "1234"}`,
+    packageName: tauriConfig.identifier || 'com.example.app',
+    productName: tauriConfig.productName || 'App',
+    devUrl: `http://${env.DEV_SERVER_HOST || '192.168.1.1'}:${env.DEV_SERVER_PORT || '1234'}`,
   };
 
-  console.log("");
-  console.log("=========================================");
-  if (buildMode === "dev") {
-    console.log("   🔧 Android 开发模式（热更新）");
+  console.log('');
+  console.log('=========================================');
+  if (buildMode === 'dev') {
+    console.log('   🔧 Android 开发模式（热更新）');
   } else {
-    console.log("   📦 Android 生产模式（硬打包）");
+    console.log('   📦 Android 生产模式（硬打包）');
   }
-  console.log("=========================================");
-  console.log("");
+  console.log('=========================================');
+  console.log('');
   info(`包名: ${config.packageName}`);
   info(`应用名: ${config.productName}`);
 
   // 检查设备连接
-  info("检查设备连接...");
+  info('检查设备连接...');
   let deviceOutput;
   try {
-    deviceOutput = execSilent("adb devices");
+    deviceOutput = execSilent('adb devices');
   } catch {
-    error("无法执行 adb 命令，请确保 Android SDK 已正确配置");
+    error('无法执行 adb 命令，请确保 Android SDK 已正确配置');
     process.exit(1);
   }
 
   const devices = deviceOutput
-    .split("\n")
-    .filter((line) => line.includes("\tdevice"))
-    .map((line) => line.split("\t")[0]);
+    .split('\n')
+    .filter((line) => line.includes('\tdevice'))
+    .map((line) => line.split('\t')[0]);
 
   if (devices.length === 0) {
-    error("未检测到设备");
+    error('未检测到设备');
     process.exit(1);
   }
   const device = devices[0];
   success(`设备: ${device}`);
 
   // 准备 MainActivity
-  const { content: mainActivityContent, mainActivityPath } = prepareMainActivity(buildMode, config);
+  const { content: mainActivityContent, mainActivityPath } =
+    prepareMainActivity(buildMode, config);
   const backupPath = `${mainActivityPath}.bak`;
 
   info(`配置 ${buildMode} 模式...`);
@@ -347,118 +373,149 @@ async function main() {
       try {
         copyFileSync(backupPath, mainActivityPath);
         unlinkSync(backupPath);
-        info("已恢复原始 MainActivity");
+        info('已恢复原始 MainActivity');
       } catch {
         // 忽略清理错误
       }
     }
   };
-  process.on("exit", cleanup);
-  process.on("SIGINT", () => {
+  process.on('exit', cleanup);
+  process.on('SIGINT', () => {
     cleanup();
     process.exit(1);
   });
 
   // 清理缓存
-  info("清理 Gradle 和 Rust 缓存...");
+  info('清理 Gradle 和 Rust 缓存...');
   killGradleProcesses();
   await new Promise((r) => setTimeout(r, 1000));
 
-  rmDir(join(ANDROID_DIR, ".gradle"));
-  rmDir(join(ANDROID_DIR, "app", "build"));
-  rmDir(join(ANDROID_DIR, "build"));
+  rmDir(join(ANDROID_DIR, '.gradle'));
+  rmDir(join(ANDROID_DIR, 'app', 'build'));
+  rmDir(join(ANDROID_DIR, 'build'));
 
   const gradleHome = isWindows
-    ? join(process.env.USERPROFILE || "", ".gradle")
-    : join(process.env.HOME || "", ".gradle");
-  rmDir(join(gradleHome, "daemon"));
+    ? join(process.env.USERPROFILE || '', '.gradle')
+    : join(process.env.HOME || '', '.gradle');
+  rmDir(join(gradleHome, 'daemon'));
 
-  const rustTargets = ["aarch64-linux-android", "armv7-linux-androideabi", "i686-linux-android", "x86_64-linux-android"];
+  const rustTargets = [
+    'aarch64-linux-android',
+    'armv7-linux-androideabi',
+    'i686-linux-android',
+    'x86_64-linux-android',
+  ];
   for (const target of rustTargets) {
-    rmDir(join(PROJECT_ROOT, "src-tauri", "target", target));
+    rmDir(join(PROJECT_ROOT, 'src-tauri', 'target', target));
   }
 
-  success("缓存已清理");
+  success('缓存已清理');
 
   // 开发模式
-  if (buildMode === "dev") {
+  if (buildMode === 'dev') {
     info(`开发服务器: ${config.devUrl}`);
     const serverOk = await checkUrl(config.devUrl);
     if (!serverOk) {
       error(`无法连接到开发服务器: ${config.devUrl}`);
-      error("请先运行: pnpm dev");
+      error('请先运行: pnpm dev');
       process.exit(1);
     }
-    success("已连接到开发服务器");
+    success('已连接到开发服务器');
 
     // 更新 tauri.conf.json 中的 devUrl
-    const tauriConfPath = join(PROJECT_ROOT, "src-tauri", "tauri.conf.json");
+    const tauriConfPath = join(PROJECT_ROOT, 'src-tauri', 'tauri.conf.json');
     if (existsSync(tauriConfPath)) {
       info(`更新 devUrl: ${config.devUrl}`);
-      let confContent = readFileSync(tauriConfPath, "utf-8");
-      confContent = confContent.replace(/"devUrl":\s*"[^"]*"/, `"devUrl": "${config.devUrl}"`);
+      let confContent = readFileSync(tauriConfPath, 'utf-8');
+      confContent = confContent.replace(
+        /"devUrl":\s*"[^"]*"/,
+        `"devUrl": "${config.devUrl}"`,
+      );
       writeFileSync(tauriConfPath, confContent);
-      success("devUrl 已更新");
+      success('devUrl 已更新');
     }
 
     // 构建 APK
-    info("构建 APK...");
+    info('构建 APK...');
     const maxAttempts = 3;
     let buildSuccess = false;
 
     for (let attempt = 1; attempt <= maxAttempts; attempt++) {
       info(`构建尝试 ${attempt}/${maxAttempts}...`);
       try {
-        exec("npx @tauri-apps/cli android build --debug", { cwd: PROJECT_ROOT });
+        exec('npx @tauri-apps/cli android build --debug', {
+          cwd: PROJECT_ROOT,
+        });
         buildSuccess = true;
-        success("构建成功");
+        success('构建成功');
         break;
       } catch {
         if (attempt < maxAttempts) {
-          warn("构建失败，30秒后重试...");
+          warn('构建失败，30秒后重试...');
           await new Promise((r) => setTimeout(r, 30000));
           killGradleProcesses();
-          rmDir(join(gradleHome, "daemon"));
+          rmDir(join(gradleHome, 'daemon'));
         }
       }
     }
 
     if (!buildSuccess) {
-      error("构建多次失败，放弃");
+      error('构建多次失败，放弃');
       process.exit(1);
     }
 
     // 查找 APK
-    let apkPath = join(ANDROID_DIR, "app", "build", "outputs", "apk", "arm64", "debug", "app-arm64-debug.apk");
+    let apkPath = join(
+      ANDROID_DIR,
+      'app',
+      'build',
+      'outputs',
+      'apk',
+      'arm64',
+      'debug',
+      'app-arm64-debug.apk',
+    );
     if (!existsSync(apkPath)) {
-      apkPath = join(ANDROID_DIR, "app", "build", "outputs", "apk", "universal", "debug", "app-universal-debug.apk");
+      apkPath = join(
+        ANDROID_DIR,
+        'app',
+        'build',
+        'outputs',
+        'apk',
+        'universal',
+        'debug',
+        'app-universal-debug.apk',
+      );
     }
     if (!existsSync(apkPath)) {
-      error("未找到 APK 文件");
+      error('未找到 APK 文件');
       process.exit(1);
     }
 
     // 安装
-    info("卸载旧版本...");
-    exec(`adb uninstall ${config.packageName}`, { ignoreError: true, silent: true });
+    info('卸载旧版本...');
+    exec(`adb uninstall ${config.packageName}`, {
+      ignoreError: true,
+      silent: true,
+    });
 
-    info("安装到设备...");
+    info('安装到设备...');
     exec(`adb install -r "${apkPath}"`);
-    success("安装完成");
+    success('安装完成');
 
-    info("启动应用...");
+    info('启动应用...');
     exec(`adb shell am start -n ${config.packageName}/.MainActivity`);
-    success("应用已启动");
+    success('应用已启动');
 
-    console.log("");
-    console.log("=========================================");
-    success("开发模式已启动！");
-    console.log("=========================================");
-    console.log("");
+    console.log('');
+    console.log('=========================================');
+    success('开发模式已启动！');
+    console.log('=========================================');
+    console.log('');
     console.log(`🔥 开发服务器: ${config.devUrl}`);
     console.log(`📱 设备: ${device}`);
-    console.log("🔄 热重载: 已启用");
-    console.log("");
+    console.log('🔄 热重载: 已启用');
+    console.log('');
   }
 
   // 生产模式
@@ -466,59 +523,82 @@ async function main() {
     const apksigner = findApksigner();
     info(`使用 apksigner: ${apksigner}`);
 
-    info("构建 APK...");
-    exec("npx @tauri-apps/cli android build", { cwd: PROJECT_ROOT });
+    info('构建 APK...');
+    exec('npx @tauri-apps/cli android build', { cwd: PROJECT_ROOT });
 
     // 查找 APK
-    let apkPath = join(ANDROID_DIR, "app", "build", "outputs", "apk", "arm64", "release", "app-arm64-release-unsigned.apk");
+    let apkPath = join(
+      ANDROID_DIR,
+      'app',
+      'build',
+      'outputs',
+      'apk',
+      'arm64',
+      'release',
+      'app-arm64-release-unsigned.apk',
+    );
     if (!existsSync(apkPath)) {
-      apkPath = join(ANDROID_DIR, "app", "build", "outputs", "apk", "universal", "release", "app-universal-release-unsigned.apk");
+      apkPath = join(
+        ANDROID_DIR,
+        'app',
+        'build',
+        'outputs',
+        'apk',
+        'universal',
+        'release',
+        'app-universal-release-unsigned.apk',
+      );
     }
     if (!existsSync(apkPath)) {
-      error("APK 文件不存在");
+      error('APK 文件不存在');
       process.exit(1);
     }
     success(`APK 构建完成: ${apkPath}`);
 
     // 签名
-    info("签名 APK...");
+    info('签名 APK...');
     const keystorePath = isWindows
-      ? join(process.env.USERPROFILE || "", ".android", "debug.keystore")
-      : join(process.env.HOME || "", ".android", "debug.keystore");
+      ? join(process.env.USERPROFILE || '', '.android', 'debug.keystore')
+      : join(process.env.HOME || '', '.android', 'debug.keystore');
 
     try {
-      exec(`"${apksigner}" sign --ks "${keystorePath}" --ks-pass pass:android --ks-key-alias androiddebugkey --key-pass pass:android "${apkPath}"`);
-      success("APK 签名成功");
+      exec(
+        `"${apksigner}" sign --ks "${keystorePath}" --ks-pass pass:android --ks-key-alias androiddebugkey --key-pass pass:android "${apkPath}"`,
+      );
+      success('APK 签名成功');
     } catch {
-      error("APK 签名失败");
+      error('APK 签名失败');
       process.exit(1);
     }
 
     // 安装
-    info("卸载旧版本...");
-    exec(`adb uninstall ${config.packageName}`, { ignoreError: true, silent: true });
+    info('卸载旧版本...');
+    exec(`adb uninstall ${config.packageName}`, {
+      ignoreError: true,
+      silent: true,
+    });
     await new Promise((r) => setTimeout(r, 1000));
 
-    info("安装到手机...");
+    info('安装到手机...');
     exec(`adb install -r "${apkPath}"`);
-    success("安装完成");
+    success('安装完成');
 
-    info("启动应用...");
+    info('启动应用...');
     exec(`adb shell am start -n ${config.packageName}/.MainActivity`);
-    success("应用已启动");
+    success('应用已启动');
 
     const stats = statSync(apkPath);
     const sizeMB = (stats.size / (1024 * 1024)).toFixed(1);
 
-    console.log("");
-    console.log("=========================================");
-    success("生产模式构建完成！");
-    console.log("=========================================");
-    console.log("");
+    console.log('');
+    console.log('=========================================');
+    success('生产模式构建完成！');
+    console.log('=========================================');
+    console.log('');
     console.log(`📦 APK: ${apkPath}`);
     console.log(`📱 设备: ${device}`);
     console.log(`💾 大小: ${sizeMB} MB`);
-    console.log("");
+    console.log('');
   }
 }
 

@@ -21,10 +21,10 @@
 
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
+import { THEME } from '../constants';
 import { logger } from '../platform/logger';
+import { safeGetItem, safeSetItem } from '../platform/storage';
 import type { ResolvedTheme, ThemeMode } from './types';
-
-const STORAGE_KEY = 'app-theme-mode';
 
 /**
  * 获取系统主题偏好
@@ -70,10 +70,10 @@ function detectMediaTheme(): ResolvedTheme {
 }
 
 /**
- * 从本地存储读取主题配置
+ * 从本地存储读取主题配置（安全版本）
  */
 function getStoredTheme(): ThemeMode | null {
-  const stored = localStorage.getItem(STORAGE_KEY);
+  const stored = safeGetItem(THEME.STORAGE_KEY);
   if (stored === 'light' || stored === 'dark' || stored === 'auto') {
     return stored;
   }
@@ -81,10 +81,10 @@ function getStoredTheme(): ThemeMode | null {
 }
 
 /**
- * 保存主题配置到本地存储
+ * 保存主题配置到本地存储（安全版本）
  */
-function saveTheme(mode: ThemeMode) {
-  localStorage.setItem(STORAGE_KEY, mode);
+function saveTheme(mode: ThemeMode): void {
+  safeSetItem(THEME.STORAGE_KEY, mode);
 }
 
 /**
@@ -155,12 +155,8 @@ function syncToNative(theme: ResolvedTheme, mode: ThemeMode) {
     }
   }
 
-  // 保存到 localStorage（作为备份）
-  try {
-    localStorage.setItem('app-theme-resolved', theme);
-  } catch (_error) {
-    // 静默失败
-  }
+  // 保存到 localStorage（作为备份，使用安全版本）
+  safeSetItem(THEME.RESOLVED_STORAGE_KEY, theme);
 }
 
 export const useThemeStore = defineStore('theme', () => {
@@ -169,6 +165,10 @@ export const useThemeStore = defineStore('theme', () => {
 
   // 状态：实际应用的主题
   const resolvedTheme = ref<ResolvedTheme>(resolveTheme(mode.value));
+
+  // 监听器清理函数
+  let cleanupMediaListener: (() => void) | null = null;
+  let cleanupAppResumeListener: (() => void) | null = null;
 
   /**
    * 设置主题模式
@@ -196,9 +196,10 @@ export const useThemeStore = defineStore('theme', () => {
 
   /**
    * 监听系统主题变化
+   * @returns 清理函数
    */
-  function setupSystemThemeListener() {
-    if (typeof window === 'undefined') return;
+  function setupSystemThemeListener(): () => void {
+    if (typeof window === 'undefined') return () => {};
 
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
 
@@ -218,21 +219,28 @@ export const useThemeStore = defineStore('theme', () => {
 
     if (mediaQuery.addEventListener) {
       mediaQuery.addEventListener('change', handleChange);
+      return () => mediaQuery.removeEventListener('change', handleChange);
     } else {
+      // 兼容旧版浏览器
       mediaQuery.addListener(handleChange);
+      return () => mediaQuery.removeListener(handleChange);
     }
   }
 
   /**
    * 监听应用恢复（从后台返回前台）
+   * @returns 清理函数
    */
-  function setupAppResumeListener() {
-    if (typeof window === 'undefined') return;
+  function setupAppResumeListener(): () => void {
+    if (typeof window === 'undefined') return () => {};
 
-    window.addEventListener('app-resume', () => {
+    const handleResume = () => {
       resolvedTheme.value = resolveTheme(mode.value);
       applyTheme(resolvedTheme.value, mode.value);
-    });
+    };
+
+    window.addEventListener('app-resume', handleResume);
+    return () => window.removeEventListener('app-resume', handleResume);
   }
 
   /**
@@ -261,8 +269,32 @@ export const useThemeStore = defineStore('theme', () => {
     }
 
     applyTheme(resolvedTheme.value, mode.value);
-    setupSystemThemeListener();
-    setupAppResumeListener();
+
+    // 设置监听器并保存清理函数
+    cleanupMediaListener = setupSystemThemeListener();
+    cleanupAppResumeListener = setupAppResumeListener();
+  }
+
+  /**
+   * 销毁主题系统（清理监听器）
+   */
+  function destroy() {
+    logger.debug('[Theme] Destroying theme system');
+
+    if (cleanupMediaListener) {
+      cleanupMediaListener();
+      cleanupMediaListener = null;
+    }
+
+    if (cleanupAppResumeListener) {
+      cleanupAppResumeListener();
+      cleanupAppResumeListener = null;
+    }
+
+    // 移除全局函数
+    if (typeof window !== 'undefined') {
+      delete window.__FORCE_THEME_CHECK__;
+    }
   }
 
   return {
@@ -274,5 +306,6 @@ export const useThemeStore = defineStore('theme', () => {
     setMode,
     toggleTheme,
     initTheme,
+    destroy,
   };
 });

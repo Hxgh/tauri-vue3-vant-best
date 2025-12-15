@@ -23,12 +23,21 @@
   "css": {
     "parser": {
       "cssModules": true
+    },
+    "linter": {
+      "enabled": true
     }
   },
   "linter": {
     "enabled": true,
     "rules": {
-      "recommended": true
+      "recommended": true,
+      "correctness": {
+        "noUnknownFunction": "off"
+      },
+      "suspicious": {
+        "noDuplicateCustomProperties": "off"
+      }
     }
   }
 }
