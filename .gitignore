@@ -40,3 +40,7 @@ src-tauri/gen/android/
 # Lock files
 package-lock.json
 pnpm-lock.yaml
+
+# Tauri (build/cache)
+src-tauri/gen/
+
