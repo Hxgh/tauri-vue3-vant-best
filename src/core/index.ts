@@ -158,4 +158,4 @@ export { useThemeStore } from './theme';
 
 // ============ 版本信息 ============
 /** Core 模块版本号 */
-export const CORE_VERSION = '1.0.0';
+export const CORE_VERSION = '1.1.0';

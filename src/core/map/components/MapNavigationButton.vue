@@ -1,22 +1,39 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
-import { checkMapInstalled, getMapApps, useMapNavigation } from '@/core/map';
+import {
+  checkMapInstalled,
+  getMapApps,
+  openMapNavigation,
+} from '@/core/map';
+import type { MapType } from '@/core/map';
 
+/**
+ * 地图导航按钮组件
+ * 支持三种导航模式：
+ * 1. 经纬度+地址：lat + lng + name（最精确）
+ * 2. 纯经纬度：lat + lng（精确定位）
+ * 3. 纯地址：name（地图搜索）
+ */
 interface Props {
-  lat: number;
-  lng: number;
-  name: string;
+  /** 纬度（可选） */
+  lat?: number;
+  /** 经度（可选） */
+  lng?: number;
+  /** 地点名称/地址（可选） */
+  name?: string;
+  /**
+   * 是否直接开始导航（仅高德地图支持）
+   * - true: 直接开始语音导航（需要有经纬度）
+   * - false: 显示路径规划，用户确认后再导航
+   * - undefined: 自动判断（有经纬度时直接导航，纯地址时路径规划）
+   */
+  directNav?: boolean;
 }
 
 const props = defineProps<Props>();
 
-// biome-ignore lint/correctness/noUnusedVariables: used in template
-const { loading, handleMapSelect } = useMapNavigation(
-  props.lat,
-  props.lng,
-  props.name,
-);
 const showActionSheet = ref(false);
+const loading = ref(false);
 const mapApps = getMapApps();
 const installedMaps = ref<Set<string>>(new Set());
 const isChecking = ref(false);
@@ -57,13 +74,27 @@ const handleClick = async () => {
   }
 };
 
+// 直接调用 openMapNavigation，使用当前 props 值（响应式）
 // biome-ignore lint/correctness/noUnusedVariables: used in template
 const handleSelect = async (action: {
   name: string;
   value: string;
 }): Promise<void> => {
   showActionSheet.value = false;
-  await handleMapSelect(action.value as 'amap' | 'baidu' | 'tencent');
+  loading.value = true;
+  try {
+    await openMapNavigation(
+      {
+        lat: props.lat,
+        lng: props.lng,
+        name: props.name,
+        directNav: props.directNav,
+      },
+      action.value as MapType,
+    );
+  } finally {
+    loading.value = false;
+  }
 };
 </script>
 

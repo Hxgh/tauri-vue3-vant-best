@@ -19,19 +19,22 @@
  * // 检查高德地图是否安装
  * const installed = await checkMapInstalled('amap');
  *
- * // 打开地图导航
- * await openMapNavigation(39.9042, 116.4074, '北京天安门', 'amap');
+ * // 打开地图导航（经纬度+地址）
+ * await openMapNavigation({ lat: 39.9042, lng: 116.4074, name: '北京天安门' }, 'amap');
+ *
+ * // 直接开始导航（跳过路径规划确认，仅高德支持）
+ * await openMapNavigation({ lat: 39.9042, lng: 116.4074, name: '北京天安门', directNav: true }, 'amap');
  * ```
  *
  * ### 2. 使用 Hook
  * ```ts
  * import { useMapNavigation } from '@/core/map';
  *
- * const { loading, mapApps, handleMapSelect } = useMapNavigation(
- *   39.9042,
- *   116.4074,
- *   '北京天安门'
- * );
+ * const { loading, mapApps, handleMapSelect } = useMapNavigation({
+ *   lat: 39.9042,
+ *   lng: 116.4074,
+ *   name: '北京天安门'
+ * });
  *
  * // 用户选择地图后
  * await handleMapSelect('baidu');
@@ -46,7 +49,7 @@
  */
 
 export { default as MapNavigationButton } from './components/MapNavigationButton.vue';
-export type { MapApp, MapResult, MapType } from './types';
+export type { MapApp, MapResult, MapType, NavigationTarget } from './types';
 export {
   checkMapInstalled,
   getMapApps,

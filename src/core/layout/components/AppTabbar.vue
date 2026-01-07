@@ -25,7 +25,6 @@ const currentTab = computed(() => {
 
 function handleTabChange(index: number) {
   // 路由切换由 van-tabbar-item 的 to 属性自动处理
-  console.log('Tab changed to:', index);
 }
 </script>
 

@@ -294,15 +294,45 @@ await startScan();
 
 ### 使用地图导航
 
+支持三种导航模式（三家地图均以经纬度为准定位，地址仅作显示名称）：
+1. **经纬度+地址**：精确定位 + 友好显示（推荐）
+2. **纯经纬度**：精确定位，无显示名称
+3. **纯地址**：地图应用搜索定位
+
+**directNav 参数**（仅高德地图支持）：
+- `true`：直接开始语音导航（需要有经纬度）
+- `false`：显示路径规划，用户确认后再导航
+- `undefined`：自动判断（有经纬度时直接导航，纯地址时路径规划）
+
 ```typescript
 import { useMapNavigation, openMapNavigation } from '@/core/map';
 
-// 方式1: 组合式函数
-const { handleMapSelect } = useMapNavigation(30.66, 104.06, '目的地');
+// 方式1: 经纬度+地址模式（最精确，推荐）
+await openMapNavigation({ lat: 30.66, lng: 104.06, name: '成都天府广场' }, 'amap');
+
+// 方式2: 纯经纬度模式（精确定位）
+await openMapNavigation({ lat: 30.66, lng: 104.06 }, 'baidu');
+
+// 方式3: 纯地址模式（地图搜索）
+await openMapNavigation({ name: '成都市天府广场' }, 'tencent');
+
+// directNav 参数：控制导航行为
+await openMapNavigation({ lat: 30.66, lng: 104.06, name: '天府广场', directNav: true }, 'amap');  // 直接导航
+await openMapNavigation({ lat: 30.66, lng: 104.06, name: '天府广场', directNav: false }, 'amap'); // 路径规划
+
+// 使用 Hook
+const { handleMapSelect } = useMapNavigation({ lat: 30.66, lng: 104.06, name: '目的地', directNav: true });
 await handleMapSelect('amap');
 
-// 方式2: 直接调用
-await openMapNavigation(30.66, 104.06, '目的地', 'baidu');
+// 使用组件
+<MapNavigationButton :lat="30.66" :lng="104.06" name="目的地" :direct-nav="true">
+  <van-button>导航</van-button>
+</MapNavigationButton>
+
+// 组件也支持纯地址模式
+<MapNavigationButton name="北京市天安门广场">
+  <van-button>导航</van-button>
+</MapNavigationButton>
 ```
 
 ### 使用通知功能

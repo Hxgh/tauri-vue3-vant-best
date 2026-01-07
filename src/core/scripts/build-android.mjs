@@ -302,11 +302,20 @@ async function main() {
   const args = process.argv.slice(2);
   const buildMode = args[0] || 'dev';
 
-  if (!['dev', 'release'].includes(buildMode)) {
+  if (!['dev', 'release', 'release-dev'].includes(buildMode)) {
     error(`无效的构建模式: ${buildMode}`);
-    console.log('用法: node src/core/scripts/build-android.mjs [dev|release]');
+    console.log('用法: node src/core/scripts/build-android.mjs [dev|release|release-dev]');
+    console.log('');
+    console.log('  dev         - 开发模式（热更新，连接本地开发服务器）');
+    console.log('  release     - 生产模式（硬打包，使用生产 API）');
+    console.log('  release-dev - 测试模式（硬打包，使用测试环境 API）');
     process.exit(1);
   }
+
+  // 判断是否为硬打包模式
+  const isReleaseMode = buildMode === 'release' || buildMode === 'release-dev';
+  // 判断使用哪个环境的 API
+  const useDevApi = buildMode === 'release-dev';
 
   // 加载配置
   const tauriConfig = loadTauriConfig();
@@ -322,6 +331,8 @@ async function main() {
   console.log('=========================================');
   if (buildMode === 'dev') {
     console.log('   🔧 Android 开发模式（热更新）');
+  } else if (buildMode === 'release-dev') {
+    console.log('   🧪 Android 测试模式（硬打包 + 测试API）');
   } else {
     console.log('   📦 Android 生产模式（硬打包）');
   }
@@ -329,32 +340,39 @@ async function main() {
   console.log('');
   info(`包名: ${config.packageName}`);
   info(`应用名: ${config.productName}`);
+  if (useDevApi) {
+    info(`API: 测试环境 (https://app.lbuy.top/dev/api)`);
+  } else if (isReleaseMode) {
+    info(`API: 生产环境 (https://app.lbuy.top/api)`);
+  }
 
   // 检查设备连接
   info('检查设备连接...');
   let deviceOutput;
+  let hasDevice = false;
+  let device = '';
   try {
     deviceOutput = execSilent('adb devices');
+    const devices = deviceOutput
+      .split('\n')
+      .filter((line) => line.includes('\tdevice'))
+      .map((line) => line.split('\t')[0]);
+
+    if (devices.length > 0) {
+      hasDevice = true;
+      device = devices[0];
+      success(`设备: ${device}`);
+    } else {
+      warn('未检测到设备，将只构建 APK（跳过安装）');
+    }
   } catch {
-    error('无法执行 adb 命令，请确保 Android SDK 已正确配置');
-    process.exit(1);
+    warn('无法执行 adb 命令，将只构建 APK（跳过安装）');
   }
 
-  const devices = deviceOutput
-    .split('\n')
-    .filter((line) => line.includes('\tdevice'))
-    .map((line) => line.split('\t')[0]);
-
-  if (devices.length === 0) {
-    error('未检测到设备');
-    process.exit(1);
-  }
-  const device = devices[0];
-  success(`设备: ${device}`);
-
-  // 准备 MainActivity
+  // 准备 MainActivity（release 和 release-dev 都使用 release 模板）
+  const mainActivityMode = isReleaseMode ? 'release' : 'dev';
   const { content: mainActivityContent, mainActivityPath } =
-    prepareMainActivity(buildMode, config);
+    prepareMainActivity(mainActivityMode, config);
   const backupPath = `${mainActivityPath}.bak`;
 
   info(`配置 ${buildMode} 模式...`);
@@ -412,7 +430,7 @@ async function main() {
   success('缓存已清理');
 
   // 开发模式
-  if (buildMode === 'dev') {
+  if (!isReleaseMode) {
     info(`开发服务器: ${config.devUrl}`);
     const serverOk = await checkUrl(config.devUrl);
     if (!serverOk) {
@@ -492,36 +510,59 @@ async function main() {
       process.exit(1);
     }
 
-    // 安装
-    info('卸载旧版本...');
-    exec(`adb uninstall ${config.packageName}`, {
-      ignoreError: true,
-      silent: true,
-    });
+    // 安装（如果有设备）
+    if (hasDevice) {
+      info('卸载旧版本...');
+      exec(`adb uninstall ${config.packageName}`, {
+        ignoreError: true,
+        silent: true,
+      });
 
-    info('安装到设备...');
-    exec(`adb install -r "${apkPath}"`);
-    success('安装完成');
+      info('安装到设备...');
+      exec(`adb install -r "${apkPath}"`);
+      success('安装完成');
 
-    info('启动应用...');
-    exec(`adb shell am start -n ${config.packageName}/.MainActivity`);
-    success('应用已启动');
+      info('启动应用...');
+      exec(`adb shell am start -n ${config.packageName}/.MainActivity`);
+      success('应用已启动');
 
-    console.log('');
-    console.log('=========================================');
-    success('开发模式已启动！');
-    console.log('=========================================');
-    console.log('');
-    console.log(`🔥 开发服务器: ${config.devUrl}`);
-    console.log(`📱 设备: ${device}`);
-    console.log('🔄 热重载: 已启用');
-    console.log('');
+      console.log('');
+      console.log('=========================================');
+      success('开发模式已启动！');
+      console.log('=========================================');
+      console.log('');
+      console.log(`🔥 开发服务器: ${config.devUrl}`);
+      console.log(`📱 设备: ${device}`);
+      console.log('🔄 热重载: 已启用');
+      console.log('');
+    } else {
+      console.log('');
+      console.log('=========================================');
+      success('开发模式 APK 构建完成！');
+      console.log('=========================================');
+      console.log('');
+      console.log(`📦 APK: ${apkPath}`);
+      console.log(`🔥 开发服务器: ${config.devUrl}`);
+      console.log('');
+      warn('请手动安装 APK 到设备');
+      console.log('');
+    }
   }
 
-  // 生产模式
+  // 生产模式（包括 release 和 release-dev）
   else {
     const apksigner = findApksigner();
     info(`使用 apksigner: ${apksigner}`);
+
+    // 先构建前端（根据模式选择不同的环境配置）
+    // 设置 TAURI_ENV_PLATFORM 确保 vite.config.ts 使用正确的 base 路径 "/"
+    const viteMode = useDevApi ? 'production.dev' : 'production';
+    info(`构建前端 (mode: ${viteMode})...`);
+    exec(`npx vite build --mode ${viteMode}`, {
+      cwd: PROJECT_ROOT,
+      env: { ...process.env, TAURI_ENV_PLATFORM: 'android' },
+    });
+    success('前端构建完成');
 
     info('构建 APK...');
     exec('npx @tauri-apps/cli android build', { cwd: PROJECT_ROOT });
@@ -571,34 +612,65 @@ async function main() {
       process.exit(1);
     }
 
-    // 安装
-    info('卸载旧版本...');
-    exec(`adb uninstall ${config.packageName}`, {
-      ignoreError: true,
-      silent: true,
-    });
-    await new Promise((r) => setTimeout(r, 1000));
-
-    info('安装到手机...');
-    exec(`adb install -r "${apkPath}"`);
-    success('安装完成');
-
-    info('启动应用...');
-    exec(`adb shell am start -n ${config.packageName}/.MainActivity`);
-    success('应用已启动');
-
     const stats = statSync(apkPath);
     const sizeMB = (stats.size / (1024 * 1024)).toFixed(1);
 
-    console.log('');
-    console.log('=========================================');
-    success('生产模式构建完成！');
-    console.log('=========================================');
-    console.log('');
-    console.log(`📦 APK: ${apkPath}`);
-    console.log(`📱 设备: ${device}`);
-    console.log(`💾 大小: ${sizeMB} MB`);
-    console.log('');
+    // 安装（如果有设备）
+    if (hasDevice) {
+      info('卸载旧版本...');
+      exec(`adb uninstall ${config.packageName}`, {
+        ignoreError: true,
+        silent: true,
+      });
+      await new Promise((r) => setTimeout(r, 1000));
+
+      info('安装到手机...');
+      exec(`adb install -r "${apkPath}"`);
+      success('安装完成');
+
+      info('启动应用...');
+      exec(`adb shell am start -n ${config.packageName}/.MainActivity`);
+      success('应用已启动');
+
+      console.log('');
+      console.log('=========================================');
+      if (useDevApi) {
+        success('测试模式构建完成！');
+      } else {
+        success('生产模式构建完成！');
+      }
+      console.log('=========================================');
+      console.log('');
+      console.log(`📦 APK: ${apkPath}`);
+      console.log(`📱 设备: ${device}`);
+      console.log(`💾 大小: ${sizeMB} MB`);
+      if (useDevApi) {
+        console.log(`🧪 API: 测试环境`);
+      } else {
+        console.log(`🚀 API: 生产环境`);
+      }
+      console.log('');
+    } else {
+      console.log('');
+      console.log('=========================================');
+      if (useDevApi) {
+        success('测试模式 APK 构建完成！');
+      } else {
+        success('生产模式 APK 构建完成！');
+      }
+      console.log('=========================================');
+      console.log('');
+      console.log(`📦 APK: ${apkPath}`);
+      console.log(`💾 大小: ${sizeMB} MB`);
+      if (useDevApi) {
+        console.log(`🧪 API: 测试环境`);
+      } else {
+        console.log(`🚀 API: 生产环境`);
+      }
+      console.log('');
+      warn('请手动安装 APK 到设备: adb install -r "' + apkPath + '"');
+      console.log('');
+    }
   }
 }
 

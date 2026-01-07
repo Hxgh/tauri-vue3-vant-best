@@ -14,11 +14,15 @@
 
       <slot name="header">
         <!-- 默认Header -->
-        <van-nav-bar :title="headerTitle">
-          <template #left>
+        <van-nav-bar
+          :title="headerTitle"
+          :left-arrow="showBackButton"
+          @click-left="handleBack"
+        >
+          <template v-if="$slots['header-left']" #left>
             <slot name="header-left"></slot>
           </template>
-          <template #right>
+          <template v-if="$slots['header-right']" #right>
             <slot name="header-right"></slot>
           </template>
         </van-nav-bar>
@@ -68,6 +72,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue';
+import { useRouter } from 'vue-router';
 import { ContentStart, HeaderMode, TabbarMode } from './types';
 
 interface Tab {
@@ -81,6 +86,8 @@ interface Props {
   headerMode?: HeaderMode;
   // Header 标题
   headerTitle?: string;
+  // 是否显示返回按钮
+  showBackButton?: boolean;
   // 内容起点
   contentStart?: ContentStart;
   // Tabbar 模式
@@ -94,6 +101,7 @@ interface Props {
 const props = withDefaults(defineProps<Props>(), {
   headerMode: HeaderMode.Standard,
   headerTitle: '',
+  showBackButton: true,
   contentStart: ContentStart.BelowHeader,
   tabbarMode: TabbarMode.Standard,
   tabs: () => [],
@@ -104,6 +112,8 @@ const emit = defineEmits<{
   'tab-change': [index: number];
 }>();
 
+const router = useRouter();
+
 // 计算响应式的 activeTab（只读，由路由控制）
 // biome-ignore lint/correctness/noUnusedVariables: used in template
 const currentTab = computed(() => props.activeTab ?? 0);
@@ -111,6 +121,12 @@ const currentTab = computed(() => props.activeTab ?? 0);
 // biome-ignore lint/correctness/noUnusedVariables: used in template
 function handleTabClick(index: number) {
   emit('tab-change', index);
+}
+
+// 处理返回按钮点击
+// biome-ignore lint/correctness/noUnusedVariables: used in template
+function handleBack() {
+  router.back();
 }
 
 /**
