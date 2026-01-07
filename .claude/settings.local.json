@@ -54,9 +54,17 @@
       "Bash(pnpm install:*)",
       "Bash(pnpm test:run:*)",
       "Bash(pnpm run type-check:*)",
-      "Bash(pnpm run lint)"
+      "Bash(pnpm run lint)",
+      "Read(/Users/hugh/workspace/github/jisen/express/src/core/map/useMapNavigation.ts)",
+      "Read(/Users/hugh/workspace/github/jisen/express/src-tauri/src/lib.rs)",
+      "Edit",
+      "Bash(node src/core/scripts/build-android.mjs:*)",
+      "Bash(open \"/Users/hugh/workspace/github/jisen/express/src-tauri/gen/android/app/build/outputs/apk/universal/release\")",
+      "Bash(open:*)",
+      "Bash(git reset:*)"
     ],
     "deny": [],
     "ask": []
-  }
+  },
+  "model": "opus"
 }

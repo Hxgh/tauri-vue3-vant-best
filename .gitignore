@@ -35,12 +35,28 @@ src/components.d.ts
 # Tauri
 src-tauri/target/
 src-tauri/gen/schemas/
-src-tauri/gen/android/
+
+# Tauri gen - 忽略构建产物，保留源码配置
+src-tauri/gen/android/.gradle/
+src-tauri/gen/android/.idea/
+src-tauri/gen/android/build/
+src-tauri/gen/android/app/build/
+src-tauri/gen/android/buildSrc/.gradle/
+src-tauri/gen/android/buildSrc/build/
+src-tauri/gen/android/local.properties
+src-tauri/gen/android/key.properties
+src-tauri/gen/android/.tauri/
+src-tauri/gen/android/tauri.settings.gradle
+src-tauri/gen/android/app/tauri.build.gradle.kts
+src-tauri/gen/android/app/src/main/java/*/generated/
+src-tauri/gen/apple/build/
+src-tauri/gen/apple/Externals/
+src-tauri/gen/apple/app.xcodeproj/xcuserdata/
+src-tauri/gen/apple/app.xcodeproj/project.xcworkspace/xcuserdata/
+src-tauri/gen/apple/Pods/
+src-tauri/gen/apple/*.xcworkspace/
 
 # Lock files
 package-lock.json
 pnpm-lock.yaml
-
-# Tauri (build/cache)
-src-tauri/gen/
 

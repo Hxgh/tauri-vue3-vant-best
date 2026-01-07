@@ -52,7 +52,7 @@ pnpm install && pnpm dev
 | theme | `import { useThemeStore } from '@/core/theme'` | 主题系统 |
 | layout | `import { MainLayout, HeaderMode } from '@/core/layout'` | 布局系统 |
 | scanner | `import { useBarcodeScanner } from '@/core/scanner'` | 扫码功能 |
-| map | `import { useMapNavigation } from '@/core/map'` | 地图导航 |
+| map | `import { openMapNavigation } from '@/core/map'` | 地图导航（高德/百度/腾讯） |
 | notification | `import { useNotification } from '@/core/notification'` | 系统通知 |
 
 ## 页面示例
@@ -72,6 +72,34 @@ pnpm install && pnpm dev
 <script setup lang="ts">
 import { MainLayout, HeaderMode, ContentStart, TabbarMode } from '@/core/layout';
 </script>
+```
+
+## 地图导航
+
+支持三种模式，以经纬度为准定位，地址作为显示名称：
+
+```typescript
+import { openMapNavigation, MapNavigationButton } from '@/core/map';
+
+// 模式1: 经纬度+地址（推荐，精确定位+友好显示）
+await openMapNavigation({ lat: 30.66, lng: 104.06, name: '成都天府广场' }, 'amap');
+
+// 模式2: 纯经纬度（精确定位，无显示名称）
+await openMapNavigation({ lat: 30.66, lng: 104.06 }, 'baidu');
+
+// 模式3: 纯地址（地图应用搜索定位）
+await openMapNavigation({ name: '成都市天府广场' }, 'tencent');
+
+// directNav 参数：控制导航行为（仅高德地图支持）
+// true = 直接开始语音导航，false = 显示路径规划，undefined = 自动判断
+await openMapNavigation({ lat: 30.66, lng: 104.06, name: '天府广场', directNav: true }, 'amap');
+```
+
+组件方式：
+```vue
+<MapNavigationButton :lat="30.66" :lng="104.06" name="天府广场" :direct-nav="true">
+  <van-button>导航</van-button>
+</MapNavigationButton>
 ```
 
 ## 开发命令

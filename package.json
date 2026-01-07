@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "tauri": "tauri",
     "build": "rsbuild build",
     "check": "biome check --write",
     "dev": "rsbuild dev --open",
