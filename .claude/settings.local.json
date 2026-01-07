@@ -61,7 +61,12 @@
       "Bash(node src/core/scripts/build-android.mjs:*)",
       "Bash(open \"/Users/hugh/workspace/github/jisen/express/src-tauri/gen/android/app/build/outputs/apk/universal/release\")",
       "Bash(open:*)",
-      "Bash(git reset:*)"
+      "Bash(git reset:*)",
+      "Bash(dir:*)",
+      "Bash(findstr:*)",
+      "Bash(./gradlew:*)",
+      "Bash(E:/SDK/platform-tools/adb.exe devices:*)",
+      "Bash(E:/SDK/platform-tools/adb.exe install:*)"
     ],
     "deny": [],
     "ask": []
