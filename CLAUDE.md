@@ -238,6 +238,16 @@ Vant 组件通过 `unplugin-vue-components` 和 `VantResolver` 自动导入（�
 - `beforeBuildCommand`: pnpm build
 - Android minSdkVersion: 24
 
+**Android 依赖配置** (`src-tauri/gen/android/app/build.gradle.kts`):
+
+Tauri 的 `barcode-scanner` 插件需要 MLKit 依赖才能识别条码：
+```kotlin
+dependencies {
+    implementation("com.google.mlkit:barcode-scanning:17.3.0")
+}
+```
+此文件会被 Git 跟踪，修改后记得提交。如果扫码功能只能打开相机但无法识别条码，检查此依赖是否存在。
+
 **环境变量配置** (复制 `.env.example` 为 `.env`):
 ```bash
 DEV_SERVER_HOST=192.168.3.81  # 开发服务器 IP
