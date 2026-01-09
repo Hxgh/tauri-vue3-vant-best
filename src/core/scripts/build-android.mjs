@@ -341,9 +341,9 @@ async function main() {
   info(`包名: ${config.packageName}`);
   info(`应用名: ${config.productName}`);
   if (useDevApi) {
-    info(`API: 测试环境 (https://app.lbuy.top/dev/api)`);
+    info(`API: 测试环境 (https://xxx/dev/api)`);
   } else if (isReleaseMode) {
-    info(`API: 生产环境 (https://app.lbuy.top/api)`);
+    info(`API: 生产环境 (https://xxx/api)`);
   }
 
   // 检查设备连接

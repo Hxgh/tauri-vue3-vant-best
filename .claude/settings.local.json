@@ -73,7 +73,8 @@
       "WebFetch(domain:github.com)",
       "Bash(E:/SDK/platform-tools/adb.exe logcat:*)",
       "Bash(E:/SDK/platform-tools/adb.exe shell:*)",
-      "Bash(E:/SDK/platform-tools/adb.exe uninstall com.jisen.express)"
+      "Bash(E:/SDK/platform-tools/adb.exe uninstall com.jisen.express)",
+      "Bash(adb uninstall:*)"
     ],
     "deny": [],
     "ask": []
