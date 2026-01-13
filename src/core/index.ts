@@ -156,6 +156,14 @@ export type { ResolvedTheme, ThemeMode } from './theme';
 // ============ Theme 主题系统 ============
 export { useThemeStore } from './theme';
 
+// ============ ImagePicker 图片选择器 ============
+export type {
+  ImageCompressOptions,
+  UseImagePickerOptions,
+  UseImagePickerReturn,
+} from './image-picker';
+export { useImagePicker } from './image-picker';
+
 // ============ 版本信息 ============
 /** Core 模块版本号 */
 export const CORE_VERSION = '1.1.0';

@@ -55,6 +55,7 @@ src/
 │   ├── map/                 # 地图导航
 │   │   └── components/      # MapNavigationButton
 │   ├── notification/        # 通知
+│   ├── image-picker/        # 图片选择器（相机/相册）
 │   ├── scripts/             # 构建脚本（跨平台）
 │   │   ├── build-android.mjs
 │   │   └── templates/       # MainActivity 模板
@@ -86,6 +87,7 @@ src/
 | **scanner** | `@/core/scanner` | 扫码系统（QR/条形码、商品查询） |
 | **map** | `@/core/map` | 地图导航（高德/百度/腾讯） |
 | **notification** | `@/core/notification` | 系统通知 |
+| **image-picker** | `@/core/image-picker` | 图片选择器（相机/相册、可选压缩） |
 
 **统一导入方式：**
 ```typescript
@@ -96,10 +98,11 @@ import { HeaderMode, ContentStart, TabbarMode } from '@/core/layout';
 import { useBarcodeScanner } from '@/core/scanner';
 import { useMapNavigation } from '@/core/map';
 import { useNotification } from '@/core/notification';
+import { useImagePicker } from '@/core/image-picker';
 
 // 或从统一入口导入（适合导入多个模块）
 import { logger, useThemeStore, HeaderMode, CORE_VERSION } from '@/core';
-console.log('Core version:', CORE_VERSION); // 1.0.0
+console.log('Core version:', CORE_VERSION); // 1.1.0
 ```
 
 ### 布局系统 (三维配置)
@@ -353,6 +356,37 @@ import { useNotification } from '@/core/notification';
 const { requestPermission, send } = useNotification();
 await requestPermission();
 await send({ title: '标题', body: '内容' });
+```
+
+### 使用图片选择器
+
+基于 Vant `van-uploader` + HTML5 原生能力，移动端会自动弹出系统选择框（相机/相册）。
+
+```typescript
+import { useImagePicker } from '@/core/image-picker';
+
+// 基础用法（不压缩）
+const { uploaderProps, previewUrls, reset } = useImagePicker({ maxCount: 9 });
+
+// 带压缩（默认压缩到 300KB）
+const { uploaderProps } = useImagePicker({ compress: true });
+
+// 自定义压缩参数
+const { uploaderProps } = useImagePicker({
+  maxCount: 3,
+  compress: {
+    maxSizeMB: 0.5,
+    maxWidthOrHeight: 800,
+    quality: 0.8,
+  },
+});
+```
+
+```vue
+<template>
+  <!-- 注意：uploaderProps 是 computed，嵌套在对象中需要 .value -->
+  <van-uploader v-bind="uploaderProps.value" />
+</template>
 ```
 
 ### 添加新的核心模块

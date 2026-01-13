@@ -53,14 +53,14 @@
 
       <!-- 功能测试入口 -->
       <van-cell-group inset title="🚀 功能测试" style="margin-top: 16px;">
-        <van-cell 
+        <van-cell
           title="键盘抬起测试"
           label="验证 --skb 注入与底部自适应"
           icon="comment-o"
           is-link
           @click="goToTest('keyboard')"
         />
-        <van-cell 
+        <van-cell
           title="地图跳转测试"
           label="原生唤起地图 + 自动 Fallback"
           icon="location-o"
@@ -80,6 +80,13 @@
           icon="bell"
           is-link
           @click="goToTest('notification')"
+        />
+        <van-cell
+          title="图片选择器"
+          label="相机/相册选择 + 图片压缩"
+          icon="photo-o"
+          is-link
+          @click="goToTest('image-picker')"
         />
       </van-cell-group>
 

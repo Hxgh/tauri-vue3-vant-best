@@ -85,4 +85,10 @@ export const demoRoutes: RouteRecordRaw[] = [
     component: () => import('./test/NotificationTestPage.vue'),
     meta: { title: '通知测试' },
   },
+  {
+    path: '/test/image-picker',
+    name: 'TestImagePicker',
+    component: () => import('./test/ImagePickerTestPage.vue'),
+    meta: { title: '图片选择器' },
+  },
 ];

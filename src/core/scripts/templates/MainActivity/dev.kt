@@ -1,27 +1,90 @@
 package {{PACKAGE_NAME}}
 
+import android.Manifest
+import android.app.Activity
+import android.content.Intent
+import android.content.pm.PackageManager
 import android.content.res.Configuration
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.os.Environment
+import android.provider.MediaStore
 import android.view.View
 import android.view.WindowInsetsController
 import android.webkit.JavascriptInterface
+import android.webkit.ValueCallback
+import android.webkit.WebChromeClient
 import android.webkit.WebSettings
 import android.webkit.WebView
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
+import androidx.core.content.FileProvider
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
+import java.io.File
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 class MainActivity : TauriActivity() {
+
   // 当前键盘高度（像素）
   private var currentKeyboardHeight = 0
 
   private var isFirstResume = true
 
+  // 文件选择回调（用于 <input type="file"> 支持）
+  private var filePathCallback: ValueCallback<Array<Uri>>? = null
+
+  // 拍照临时文件 URI
+  private var cameraPhotoUri: Uri? = null
+
+  // 是否有待处理的文件选择请求
+  private var pendingFileChooser = false
+
+  // 相机权限请求启动器
+  private val cameraPermissionLauncher = registerForActivityResult(
+    ActivityResultContracts.RequestPermission()
+  ) { granted ->
+    if (pendingFileChooser) {
+      pendingFileChooser = false
+      launchFileChooser(includeCameraIntent = granted)
+    }
+  }
+
+  // 文件选择器启动器
+  private val fileChooserLauncher = registerForActivityResult(
+    ActivityResultContracts.StartActivityForResult()
+  ) { result ->
+    val callback = filePathCallback
+    filePathCallback = null
+
+    if (result.resultCode == Activity.RESULT_OK) {
+      val clipData = result.data?.clipData
+      val dataUri = result.data?.data
+
+      val uris = when {
+        clipData != null -> Array(clipData.itemCount) { i -> clipData.getItemAt(i).uri }
+        dataUri != null -> arrayOf(dataUri)
+        cameraPhotoUri != null -> arrayOf(cameraPhotoUri!!)
+        else -> null
+      }
+      callback?.onReceiveValue(uris)
+    } else {
+      callback?.onReceiveValue(null)
+    }
+    cameraPhotoUri = null
+  }
+
   override fun onCreate(savedInstanceState: Bundle?) {
     enableEdgeToEdge()
     super.onCreate(savedInstanceState)
+
+    // 启用 WebView 调试（开发模式）
+    WebView.setWebContentsDebuggingEnabled(true)
 
     // 禁用 Android 自动添加的对比度保护层（半透明 scrim）
     // 这是浅色模式下导航栏出现毛玻璃效果的根本原因
@@ -124,6 +187,9 @@ class MainActivity : TauriActivity() {
         mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
         // 启用 JavaScript（确保 Bridge 可用）
         javaScriptEnabled = true
+        // 启用文件访问（支持 input type=file）
+        allowFileAccess = true
+        allowContentAccess = true
       }
 
       // 设置 WebViewClient 以在页面加载完成后注入主题
@@ -160,19 +226,92 @@ class MainActivity : TauriActivity() {
   }
 
   /**
-   * 设置 WebView Console 输出到 Logcat（用于调试）
+   * 设置 WebView Console 输出到 Logcat 和文件选择器支持
    */
   private fun setupWebViewConsole() {
     runOnUiThread {
       val webView = findWebView()
-      webView?.webChromeClient = object : android.webkit.WebChromeClient() {
+      webView?.webChromeClient = object : WebChromeClient() {
         override fun onConsoleMessage(consoleMessage: android.webkit.ConsoleMessage?): Boolean {
           consoleMessage?.let {
             android.util.Log.d("WebView", "[JS] ${it.message()}")
           }
           return true
         }
+
+        // 处理文件选择（支持拍照和相册）
+        override fun onShowFileChooser(
+          webView: WebView?,
+          filePathCallback: ValueCallback<Array<Uri>>?,
+          fileChooserParams: FileChooserParams?
+        ): Boolean {
+          // 取消之前的回调
+          this@MainActivity.filePathCallback?.onReceiveValue(null)
+          this@MainActivity.filePathCallback = filePathCallback
+
+          // 检查相机权限
+          val hasCameraPermission = ContextCompat.checkSelfPermission(
+            this@MainActivity, Manifest.permission.CAMERA
+          ) == PackageManager.PERMISSION_GRANTED
+
+          if (hasCameraPermission) {
+            launchFileChooser(includeCameraIntent = true)
+          } else {
+            // 请求相机权限
+            pendingFileChooser = true
+            cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
+          }
+          return true
+        }
       }
+    }
+  }
+
+  /**
+   * 启动文件选择器
+   */
+  private fun launchFileChooser(includeCameraIntent: Boolean) {
+    try {
+      // 创建图库选择 Intent
+      val galleryIntent = Intent(Intent.ACTION_GET_CONTENT).apply {
+        type = "image/*"
+        putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true)
+      }
+
+      val chooserIntent = Intent.createChooser(galleryIntent, "选择图片")
+
+      // 如果有相机权限，添加拍照选项
+      if (includeCameraIntent) {
+        val cameraIntent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
+        cameraPhotoUri = createImageUri()
+        cameraPhotoUri?.let {
+          cameraIntent.putExtra(MediaStore.EXTRA_OUTPUT, it)
+        }
+        chooserIntent.putExtra(Intent.EXTRA_INITIAL_INTENTS, arrayOf(cameraIntent))
+      }
+
+      fileChooserLauncher.launch(chooserIntent)
+    } catch (e: Exception) {
+      android.util.Log.e("MainActivity", "File chooser error", e)
+      filePathCallback?.onReceiveValue(null)
+      filePathCallback = null
+      cameraPhotoUri = null
+    }
+  }
+
+  /**
+   * 创建拍照用的临时文件 URI
+   */
+  private fun createImageUri(): Uri? {
+    return try {
+      val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
+      val imageFileName = "JPEG_${timeStamp}_"
+      val storageDir = getExternalFilesDir(Environment.DIRECTORY_PICTURES)
+      val imageFile = File.createTempFile(imageFileName, ".jpg", storageDir)
+      FileProvider.getUriForFile(this, "${packageName}.fileprovider", imageFile)
+    } catch (e: Exception) {
+      android.util.Log.e("MainActivity", "Failed to create image URI", e)
+      null
     }
   }
 
@@ -184,6 +323,9 @@ class MainActivity : TauriActivity() {
     runOnUiThread {
       val webView = findWebView()
       if (webView != null) {
+        // 启用文件访问（支持 input type=file）
+        webView.settings.allowFileAccess = true
+        webView.settings.allowContentAccess = true
         webView.addJavascriptInterface(ThemeBridge(), "AndroidTheme")
         webView.addJavascriptInterface(MapBridge(), "AndroidMap")
         setupWebViewConsole()
