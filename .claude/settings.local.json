@@ -74,7 +74,10 @@
       "Bash(E:/SDK/platform-tools/adb.exe logcat:*)",
       "Bash(E:/SDK/platform-tools/adb.exe shell:*)",
       "Bash(E:/SDK/platform-tools/adb.exe uninstall com.jisen.express)",
-      "Bash(adb uninstall:*)"
+      "Bash(adb uninstall:*)",
+      "Bash(pnpm add:*)",
+      "Bash(curl:*)",
+      "Bash(timeout 20 adb logcat \"WebView:D\" \"*:S\")"
     ],
     "deny": [],
     "ask": []
