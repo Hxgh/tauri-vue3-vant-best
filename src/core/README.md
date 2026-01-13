@@ -12,6 +12,7 @@
 | `scanner` | 扫码系统 | 跨平台扫码、商品查询 |
 | `map` | 地图导航 | 高德/百度/腾讯地图导航 |
 | `notification` | 通知系统 | 系统通知、权限管理 |
+| `image-picker` | 图片选择器 | 相机/相册选择、图片压缩 |
 | `scripts` | 构建脚本 | 跨平台 Android 构建 |
 
 ## 快速迁移
@@ -55,8 +56,8 @@ pnpm add @tauri-apps/plugin-http
 # 通知功能
 pnpm add @tauri-apps/plugin-notification
 
-# 地图功能（仅需要 Tauri API）
-pnpm add @tauri-apps/api
+# 图片压缩功能
+pnpm add browser-image-compression
 ```
 
 ### Rust 依赖 (Cargo.toml)
@@ -405,6 +406,11 @@ src/core/
 │   ├── types.ts
 │   └── useNotification.ts
 │
+├── image-picker/       # 图片选择器
+│   ├── index.ts
+│   ├── types.ts
+│   └── useImagePicker.ts
+│
 ├── scripts/            # 构建脚本
 │   ├── build-android.mjs
 │   └── templates/
@@ -420,5 +426,5 @@ src/core/
 
 ```ts
 import { CORE_VERSION } from '@/core';
-console.log('Core version:', CORE_VERSION); // 1.0.0
+console.log('Core version:', CORE_VERSION); // 1.1.0
 ```
